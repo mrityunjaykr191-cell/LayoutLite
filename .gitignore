@@ -1,0 +1,36 @@
+# Node & npm dependencies
+node_modules/
+.npm/
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Python virtual environment & cache
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Local development caches and generated files
+**/.vite/
+*.pdf
+.system_generated/
+# Local AI agent instructions and skills
+.agents/
