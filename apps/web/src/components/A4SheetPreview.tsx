@@ -1,16 +1,24 @@
 import React from 'react';
 import type { SheetLayoutResult } from '@passport-photo/shared';
 
-interface A4SheetPreviewProps {
+export interface A4SheetPreviewProps {
   readonly layoutResult: SheetLayoutResult;
   readonly photoUrl: string;
   readonly showCutGuides?: boolean;
+  readonly selectedPhotoIndex?: number | null;
+  readonly onSelectPhoto?: (index: number | null) => void;
+  readonly interactive?: boolean;
+  readonly className?: string;
 }
 
 export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
   layoutResult,
   photoUrl,
   showCutGuides,
+  selectedPhotoIndex = null,
+  onSelectPhoto,
+  interactive = Boolean(onSelectPhoto),
+  className = '',
 }) => {
   const { sheetDimensions, usableArea, photos, fits } = layoutResult;
   const sheetW = sheetDimensions.widthMm;
@@ -26,11 +34,32 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
   const rulerXMm = (sheetW - rulerWidthMm) / 2;
   const rulerYMm = sheetH - 9; // 9 mm above sheet bottom edge
 
+  const handlePhotoClick = (e: React.MouseEvent, index: number) => {
+    if (!interactive || !onSelectPhoto) return;
+    e.stopPropagation();
+    onSelectPhoto(selectedPhotoIndex === index ? null : index);
+  };
+
+  const handlePhotoKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (!interactive || !onSelectPhoto) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      onSelectPhoto(selectedPhotoIndex === index ? null : index);
+    }
+  };
+
+  const handleSheetBackgroundClick = () => {
+    if (interactive && onSelectPhoto && selectedPhotoIndex !== null) {
+      onSelectPhoto(null);
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center">
+    <div className={`flex flex-col items-center ${className}`}>
       {/* Visual Sheet Frame with paper drop shadow */}
       <div
-        className="relative w-full max-w-[340px] sm:max-w-[400px] select-none rounded-sm bg-white shadow-md ring-1 ring-slate-900/10 transition-all duration-200"
+        className="relative w-full select-none rounded-sm bg-white shadow-md ring-1 ring-slate-900/10 transition-all duration-200"
         style={{ aspectRatio: `${sheetW} / ${sheetH}` }}
       >
         <svg
@@ -38,6 +67,7 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
           className="h-full w-full rounded-sm"
           role="img"
           aria-label={`A4 sheet layout preview showing ${photos.length} photos`}
+          onClick={handleSheetBackgroundClick}
         >
           {/* Sheet Background */}
           <rect
@@ -46,6 +76,7 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
             width={sheetW}
             height={sheetH}
             fill="#ffffff"
+            className={interactive ? 'cursor-default' : undefined}
           />
 
           {/* Printable Usable Area Boundary (subtle dashed boundary) */}
@@ -62,10 +93,28 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
 
           {/* Placed Photos and Cut Guides */}
           {photos.map((photo) => {
+            const isSelected = selectedPhotoIndex === photo.index;
             const { topLeft, topRight, bottomLeft, bottomRight } = photo.cutGuides;
 
             return (
-              <g key={`placed-photo-${photo.index}`}>
+              <g
+                key={`placed-photo-${photo.index}`}
+                onClick={(e) => handlePhotoClick(e, photo.index)}
+                onKeyDown={(e) => handlePhotoKeyDown(e, photo.index)}
+                tabIndex={interactive ? 0 : undefined}
+                role={interactive ? 'button' : undefined}
+                aria-pressed={interactive ? isSelected : undefined}
+                aria-label={
+                  interactive
+                    ? `Photo ${photo.index + 1}: ${photo.widthMm.toFixed(1)} by ${photo.heightMm.toFixed(1)} mm at X ${photo.xMm.toFixed(1)}, Y ${photo.yMm.toFixed(1)} mm`
+                    : undefined
+                }
+                className={
+                  interactive
+                    ? 'cursor-pointer transition-transform focus:outline-none'
+                    : undefined
+                }
+              >
                 {/* Photo Portrait Image */}
                 <image
                   href={photoUrl}
@@ -83,9 +132,23 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
                   width={photo.widthMm}
                   height={photo.heightMm}
                   fill="none"
-                  stroke="#94a3b8"
-                  strokeWidth="0.15"
+                  stroke={isSelected ? '#2563eb' : '#94a3b8'}
+                  strokeWidth={isSelected ? '0.7' : '0.15'}
                 />
+
+                {/* Active Selection Highlight Overlay */}
+                {isSelected && (
+                  <rect
+                    x={photo.xMm}
+                    y={photo.yMm}
+                    width={photo.widthMm}
+                    height={photo.heightMm}
+                    fill="#2563eb"
+                    fillOpacity="0.16"
+                    stroke="#2563eb"
+                    strokeWidth="0.75"
+                  />
+                )}
 
                 {/* Optional Corner Cut-Guide Ticks */}
                 {shouldRenderCutGuides && (
@@ -186,7 +249,7 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
               </span>
               <p className="text-xs font-bold text-slate-900">Layout Exceeds Page</p>
               <p className="mt-1 text-[11px] text-slate-600">
-                The requested arrangement does not fit inside the printable A4 boundaries.
+                The requested arrangement does not fit inside printable A4 boundaries.
               </p>
             </div>
           </div>
@@ -194,7 +257,7 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
       </div>
 
       {/* Sheet Metadata Caption */}
-      <div className="mt-2.5 flex items-center justify-center gap-2 text-[11px] font-mono text-slate-500">
+      <div className="mt-2.5 flex items-center justify-center gap-2 text-[11px] font-mono tabular-nums text-slate-500">
         <span className="rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-700">
           A4
         </span>

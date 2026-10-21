@@ -244,7 +244,7 @@ export const App: React.FC = () => {
     : activeWorkflowStep;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+    <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-900 antialiased">
       {/* Top Application Header */}
       <Header />
 
@@ -252,22 +252,22 @@ export const App: React.FC = () => {
       <Stepper currentStep={currentStep} />
 
       {/* Main Workspace Area with mobile-first padding */}
-      <main className="mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-3 py-3 sm:px-6 sm:py-6">
         <div className="flex flex-col gap-4 sm:gap-6">
           {/* STEP 1: Upload Photo Dropzone */}
           {!rawPhoto && (
             <div className="flex flex-col gap-4 sm:gap-6">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-blue-600 text-[11px] sm:text-xs font-bold text-white">
+                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-blue-600 text-[11px] sm:text-xs font-bold text-white tabular-nums">
                     1
                   </span>
-                  <h2 className="text-base font-bold text-slate-900 sm:text-xl">
+                  <h2 className="text-base font-bold text-slate-900 sm:text-lg">
                     Select Portrait Photo
                   </h2>
                 </div>
-                <p className="mt-0.5 text-xs sm:text-sm text-slate-600">
-                  Upload a clear portrait photo.
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Upload a clear portrait photo to crop, prepare, and tile for physical printing.
                 </p>
               </div>
 

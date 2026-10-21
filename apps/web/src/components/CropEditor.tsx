@@ -366,12 +366,12 @@ export const CropEditor: React.FC<CropEditorProps> = ({
   };
 
   return (
-    <div className="w-full rounded-xl border border-slate-200 bg-white p-3.5 sm:p-6 shadow-xs">
+    <div className="w-full rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-5 shadow-xs">
       {/* Header bar */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white tabular-nums">
               2
             </span>
             <h2 className="text-base font-bold text-slate-900 sm:text-lg">
@@ -384,8 +384,8 @@ export const CropEditor: React.FC<CropEditorProps> = ({
         </div>
 
         {/* Physical Dimension Aspect Tag */}
-        <div className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-mono font-semibold text-blue-900">
-          <span className="font-sans text-blue-500 font-normal">Aspect:</span>
+        <div className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-mono font-medium text-slate-700 tabular-nums">
+          <span className="font-sans text-slate-400 font-normal">Aspect:</span>
           <span>
             {photoDimensions.widthMm} × {photoDimensions.heightMm} mm
           </span>
@@ -397,7 +397,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
         <div
           role="alert"
           aria-live="polite"
-          className="mt-3.5 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3 text-xs sm:text-sm text-red-900"
+          className="mt-3.5 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-xs sm:text-sm text-red-900"
         >
           <svg
             className="mt-0.5 h-4 w-4 shrink-0 text-red-600"
@@ -429,7 +429,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        className="relative mt-3.5 h-[320px] sm:h-[420px] w-full overflow-hidden rounded-lg bg-slate-950 select-none touch-pan-y focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="relative mt-3 h-[300px] sm:h-[420px] w-full overflow-hidden rounded-xl bg-slate-950 select-none touch-pan-y focus-visible:ring-2 focus-visible:ring-blue-500"
       >
         {/* Rendered Source Image with 2D transform */}
         <div
@@ -608,22 +608,22 @@ export const CropEditor: React.FC<CropEditorProps> = ({
       </div>
 
       {/* Control Toolbar */}
-      <div className="mt-4 flex flex-col gap-3 rounded-lg bg-slate-50 p-3 sm:p-4 border border-slate-100">
+      <div className="mt-3.5 flex flex-col gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 sm:p-3.5">
         {/* Zoom Slider Row */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <label
             htmlFor="crop-zoom-slider"
             className="text-xs font-semibold text-slate-700 shrink-0 flex items-center gap-1.5"
           >
             <span>Zoom</span>
-            <span className="font-mono text-blue-700">{cropSettings.zoom.toFixed(1)}×</span>
+            <span className="font-mono font-bold text-blue-700 tabular-nums">{cropSettings.zoom.toFixed(1)}×</span>
           </label>
 
           <button
             type="button"
             onClick={() => handleZoomChange(cropSettings.zoom - 0.1)}
             disabled={cropSettings.zoom <= MIN_ZOOM}
-            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none font-bold text-sm focus-visible:ring-2 focus-visible:ring-blue-600 active:scale-[0.96]"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none font-bold text-base focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
             aria-label="Zoom out"
           >
             −
@@ -645,7 +645,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
             type="button"
             onClick={() => handleZoomChange(cropSettings.zoom + 0.1)}
             disabled={cropSettings.zoom >= MAX_ZOOM}
-            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none font-bold text-sm focus-visible:ring-2 focus-visible:ring-blue-600 active:scale-[0.96]"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none font-bold text-base focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
             aria-label="Zoom in"
           >
             +
@@ -653,12 +653,12 @@ export const CropEditor: React.FC<CropEditorProps> = ({
         </div>
 
         {/* Rotate and Reset Action Buttons */}
-        <div className="flex items-center justify-between border-t border-slate-200/60 pt-3">
+        <div className="flex items-center justify-between border-t border-slate-200/60 pt-2.5">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleRotate90}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-600 active:scale-[0.96] transition-transform"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
             >
               <svg
                 className="h-4 w-4 shrink-0 text-slate-600"
@@ -676,7 +676,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               </svg>
               <span>Rotate 90°</span>
               {cropSettings.rotation !== 0 && (
-                <span className="rounded-sm bg-blue-100 px-1 font-mono text-[10px] text-blue-800">
+                <span className="rounded bg-blue-100 px-1 font-mono text-[10px] font-bold text-blue-800 tabular-nums">
                   {cropSettings.rotation}°
                 </span>
               )}
@@ -685,14 +685,14 @@ export const CropEditor: React.FC<CropEditorProps> = ({
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-600 active:scale-[0.96] transition-transform"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
             >
               <span>Reset</span>
             </button>
           </div>
 
-          <div className="text-[11px] text-slate-500 hidden sm:block">
-            Keyboard: Arrow keys to move • +/- to zoom
+          <div className="text-[11px] text-slate-400 hidden sm:block">
+            Keyboard: Arrow keys to pan • + / − to zoom
           </div>
         </div>
       </div>
@@ -703,7 +703,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
           type="button"
           onClick={onCancel}
           disabled={isExporting}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 active:scale-[0.96] transition-transform"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
         >
           Change Photo
         </button>
@@ -712,7 +712,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
           type="button"
           onClick={handleApplyCrop}
           disabled={isExporting}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 active:scale-[0.96] transition-transform disabled:opacity-50"
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 touch-press disabled:opacity-50"
         >
           {isExporting ? (
             <>

@@ -77,7 +77,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
         <div
           role="alert"
           aria-live="polite"
-          className="mb-4 flex items-start justify-between rounded-lg border border-red-200 bg-red-50 p-3.5 sm:p-4 text-xs sm:text-sm text-red-900"
+          className="mb-4 flex items-start justify-between rounded-xl border border-red-200 bg-red-50 p-3.5 sm:p-4 text-xs sm:text-sm text-red-900 shadow-xs"
         >
           <div className="flex items-start gap-2.5">
             <svg
@@ -102,7 +102,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
           <button
             type="button"
             onClick={onClearError}
-            className="ml-2 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-red-700 hover:bg-red-100 hover:text-red-900 focus-visible:ring-2 focus-visible:ring-red-600"
+            className="ml-2 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-red-700 hover:bg-red-100 hover:text-red-900 focus-visible:ring-2 focus-visible:ring-red-600 touch-press"
             aria-label="Dismiss error"
           >
             ✕
@@ -125,28 +125,28 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
         }}
         tabIndex={0}
         role="button"
-        aria-label="Select photo. Click or drag and drop a JPG, PNG, or WebP portrait image."
-        className={`relative flex min-h-[190px] sm:min-h-[250px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center transition-colors sm:p-8 ${
+        aria-label="Upload photo. Click or drag and drop a JPG, PNG, or WebP portrait image."
+        className={`group relative flex min-h-[200px] sm:min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-all duration-150 ${
           isDragOver
             ? 'border-blue-600 bg-blue-50/70 ring-4 ring-blue-100'
-            : 'border-slate-300 bg-white hover:border-blue-500 hover:bg-slate-50/50'
+            : 'border-slate-300 bg-white hover:border-blue-500 hover:bg-slate-50/60 shadow-xs'
         } ${isLoading ? 'pointer-events-none opacity-60' : ''}`}
       >
         {isLoading ? (
-          <div className="flex flex-col items-center gap-3 py-4">
+          <div className="flex flex-col items-center gap-3 py-6" role="status" aria-live="polite">
             <div className="h-9 w-9 sm:h-10 sm:w-10 animate-spin rounded-full border-3 border-blue-600 border-t-transparent" />
             <p className="text-xs sm:text-sm font-medium text-slate-700">Reading and preparing photo...</p>
           </div>
         ) : (
-          <>
-            {/* Upload Icon */}
+          <div className="flex flex-col items-center max-w-md">
+            {/* Upload Icon inside concentric pill */}
             <div
-              className={`mb-3 flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full transition-transform ${
-                isDragOver ? 'scale-110 bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+              className={`mb-3.5 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl transition-all duration-150 ${
+                isDragOver ? 'scale-110 bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600'
               }`}
             >
               <svg
-                className="h-5 w-5 sm:h-6 sm:w-6"
+                className="h-6 w-6 sm:h-7 sm:w-7"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={1.75}
@@ -163,25 +163,39 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
 
             {/* Prompt text */}
             <p className="text-sm font-semibold text-slate-900 sm:text-base">
-              {isDragOver ? 'Drop your photo here' : 'Choose a portrait photo'}
+              {isDragOver ? 'Drop portrait photo here' : 'Choose a portrait photo'}
             </p>
-            <p id="upload-guidelines" className="mt-1 max-w-sm text-xs sm:text-sm text-slate-500 px-2">
-              JPG, JPEG, PNG, or WebP up to{' '}
-              <span className="font-semibold text-slate-700">{formatFileSize(MAX_FILE_SIZE_BYTES)}</span>.
+            <p className="mt-1 text-xs text-slate-500">
+              Drag and drop an image file here, or click to browse
             </p>
 
-            {/* Visual Action Button with 44px min touch target */}
-            <button
-              type="button"
-              className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 active:scale-[0.96] transition-transform"
-              tabIndex={-1}
+            {/* Visual Action Button */}
+            <span
+              className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs group-hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
+              aria-hidden="true"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               Select Photo File
-            </button>
-          </>
+            </span>
+
+            {/* Requirements Pills */}
+            <div
+              id="upload-guidelines"
+              className="mt-4 flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-mono text-slate-500"
+            >
+              <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-medium text-slate-600">
+                JPG, PNG, WebP
+              </span>
+              <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-medium text-slate-600 tabular-nums">
+                Max {formatFileSize(MAX_FILE_SIZE_BYTES)}
+              </span>
+              <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-medium text-slate-600">
+                Local Only
+              </span>
+            </div>
+          </div>
         )}
       </div>
     </div>
