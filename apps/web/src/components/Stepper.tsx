@@ -24,15 +24,15 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
   const currentStepObj = WORKFLOW_STEPS.find((s) => s.id === currentStep) ?? WORKFLOW_STEPS[0]!;
 
   return (
-    <nav aria-label="Workflow progress" className="border-b border-slate-200/80 bg-white no-print">
+    <nav aria-label="Workflow progress" className="border-b border-[#E3E1DC] bg-white no-print">
       {/* Mobile Stepper View (< sm) */}
       <div className="sm:hidden px-3 py-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white tabular-nums">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#55534F] text-[11px] font-bold text-white tabular-nums">
             {currentStep}
           </span>
-          <span className="text-xs font-semibold text-slate-900 truncate" aria-current="step">
-            <span className="text-slate-500 font-normal tabular-nums">{currentStep}/{WORKFLOW_STEPS.length}</span>{' '}
+          <span className="text-xs font-semibold text-[#393834] truncate" aria-current="step">
+            <span className="text-[#777570] font-normal tabular-nums">{currentStep}/{WORKFLOW_STEPS.length}</span>{' '}
             {currentStepObj.name}
           </span>
         </div>
@@ -44,10 +44,10 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
               key={step.id}
               className={`h-1.5 rounded-full transition-all duration-200 ${
                 step.id === currentStep
-                  ? 'w-4 bg-blue-600'
+                  ? 'w-4 bg-[#55534F]'
                   : step.id < currentStep
-                  ? 'w-1.5 bg-slate-400'
-                  : 'w-1.5 bg-slate-200'
+                  ? 'w-1.5 bg-[#777570]'
+                  : 'w-1.5 bg-[#E3E1DC]'
               }`}
             />
           ))}
@@ -55,8 +55,8 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
       </div>
 
       {/* Desktop Stepper View (>= sm) */}
-      <div className="hidden sm:block mx-auto max-w-5xl px-6 py-2.5 overflow-x-auto">
-        <ol className="flex items-center gap-1.5 sm:gap-2 text-xs font-medium min-w-max">
+      <div className="hidden sm:block mx-auto max-w-5xl px-4 sm:px-6 py-2 overflow-x-auto">
+        <ol className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium min-w-max">
           {WORKFLOW_STEPS.map((step, index) => {
             const isCurrent = step.id === currentStep;
             const isCompleted = step.id < currentStep;
@@ -64,22 +64,22 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
             return (
               <li key={step.id} className="flex shrink-0 items-center">
                 <div
-                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 transition-colors ${
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition-colors ${
                     isCurrent
-                      ? 'bg-blue-600 font-semibold text-white shadow-xs'
+                      ? 'bg-[#55534F] font-semibold text-white'
                       : isCompleted
-                      ? 'bg-slate-100 text-slate-700'
-                      : 'text-slate-400'
+                      ? 'text-[#393834] font-medium'
+                      : 'text-[#777570] font-normal'
                   }`}
                   aria-current={isCurrent ? 'step' : undefined}
                 >
                   <span
                     className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold tabular-nums ${
                       isCurrent
-                        ? 'bg-white text-blue-700'
+                        ? 'bg-white text-[#55534F]'
                         : isCompleted
-                        ? 'bg-slate-200 text-slate-700'
-                        : 'border border-slate-300 text-slate-400'
+                        ? 'bg-[#E3E1DC] text-[#393834]'
+                        : 'border border-[#E3E1DC] text-[#777570]'
                     }`}
                   >
                     {isCompleted ? '✓' : step.id}
@@ -89,7 +89,7 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
 
                 {index < WORKFLOW_STEPS.length - 1 && (
                   <svg
-                    className="mx-1 h-3 w-3 shrink-0 text-slate-300"
+                    className="mx-0.5 sm:mx-1 h-3 w-3 shrink-0 text-[#C8C5BE]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

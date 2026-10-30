@@ -109,22 +109,17 @@ export const ColorStep: React.FC<ColorStepProps> = ({
   );
 
   return (
-    <div className="w-full rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-5 shadow-xs">
+    <div className="w-full rounded-xl border border-[#E3E1DC] bg-white p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       {/* Step Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#E3E1DC] pb-3 sm:pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white tabular-nums">
-              4
-            </span>
-            <h2 className="text-base font-bold text-slate-900 sm:text-lg">
-              Background Color Selection
-            </h2>
-          </div>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#393834]">
+            Background Color
+          </h2>
+          <p className="mt-1 text-xs sm:text-sm text-[#777570]">
             {isBackgroundSkipped || !cutoutBlob
-              ? 'Original photo background retained. Advance to physical dimensions or enable background removal.'
-              : 'Choose a solid background color for your document photo.'}
+              ? 'Original photo background retained. Advance to physical dimensions or re-enable background removal.'
+              : 'Choose a standard solid background color or specify a custom shade.'}
           </p>
         </div>
       </div>
@@ -132,8 +127,8 @@ export const ColorStep: React.FC<ColorStepProps> = ({
       {/* Main Content Layout */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
         {/* Left Preview Stage (md:col-span-6) */}
-        <div className="md:col-span-6 flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-4 min-h-[260px] sm:min-h-[320px]">
-          <div className="relative max-h-[300px] max-w-full overflow-hidden rounded-lg shadow-xs bg-white">
+        <div className="md:col-span-6 flex flex-col items-center justify-center rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-4 min-h-[260px] sm:min-h-[320px]">
+          <div className="relative max-h-[300px] max-w-full overflow-hidden rounded-lg shadow-sm bg-white border border-[#E3E1DC]">
             <img
               src={
                 isBackgroundSkipped || !cutoutBlob
@@ -142,35 +137,31 @@ export const ColorStep: React.FC<ColorStepProps> = ({
               }
               alt="Document photo color preview"
               className="max-h-[280px] max-w-full object-contain rounded-lg"
-              style={{
-                outline: '1px solid rgba(0, 0, 0, 0.08)',
-                outlineOffset: '-1px',
-              }}
             />
 
             {isCompositing && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-xs">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#55534F] border-t-transparent" />
               </div>
             )}
           </div>
 
-          <div className="mt-3 flex items-center gap-2 text-xs text-slate-600">
+          <div className="mt-3 flex items-center gap-2 text-xs text-[#55534F]">
             {isBackgroundSkipped || !cutoutBlob ? (
-              <span className="font-medium text-slate-500">
+              <span className="font-medium text-[#777570]">
                 Original Photo Background Active
               </span>
             ) : (
               <>
                 <span
-                  className="h-3.5 w-3.5 rounded-full border border-slate-300 shadow-xs shrink-0"
+                  className="h-3.5 w-3.5 rounded-full border border-[#E3E1DC] shadow-xs shrink-0"
                   style={{ backgroundColor: activeColor }}
                   aria-hidden="true"
                 />
-                <span className="font-semibold text-slate-800">
+                <span className="font-semibold text-[#393834]">
                   {activePreset ? activePreset.name : 'Custom Color'}
                 </span>
-                <span className="font-mono text-slate-400 tabular-nums">({activeColor})</span>
+                <span className="font-mono text-[#777570] tabular-nums">({activeColor})</span>
               </>
             )}
           </div>
@@ -181,16 +172,16 @@ export const ColorStep: React.FC<ColorStepProps> = ({
           {isBackgroundSkipped || !cutoutBlob ? (
             // Concise explainer when background removal was skipped
             <div className="flex flex-col gap-3">
-              <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4 text-xs text-slate-600">
-                <p className="font-semibold text-slate-900">Original Background Retained</p>
-                <p className="mt-1 leading-relaxed text-slate-600">
+              <div className="rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-4 text-xs text-[#55534F]">
+                <p className="font-semibold text-[#393834]">Original Background Retained</p>
+                <p className="mt-1 leading-relaxed text-[#777570]">
                   Solid background colors require isolating the subject. Since you chose to keep your original background, you can proceed directly to setting photo dimensions.
                 </p>
                 <div className="mt-3">
                   <button
                     type="button"
                     onClick={onBackToBackground}
-                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 touch-press"
+                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3 py-1.5 text-xs font-medium text-[#393834] hover:bg-[#FAF9F6] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                   >
                     <span>Enable Background Removal in Step 3</span>
                   </button>
@@ -201,15 +192,15 @@ export const ColorStep: React.FC<ColorStepProps> = ({
             // Color Selector when cutout is available
             <div className="flex flex-col gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                <label className="text-xs font-semibold text-[#393834]">
                   Solid Background Colors
                 </label>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-[#777570]">
                   Select a common standard background color:
                 </p>
 
                 {/* Preset Color Swatches */}
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-2">
+                <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-2">
                   {COLOR_PRESETS.map((preset) => {
                     const isSelected = activeColor.toUpperCase() === preset.hex.toUpperCase();
 
@@ -219,25 +210,25 @@ export const ColorStep: React.FC<ColorStepProps> = ({
                         type="button"
                         onClick={() => applyColor(preset.hex)}
                         aria-pressed={isSelected}
-                        className={`flex min-h-[48px] items-center gap-3 rounded-xl border p-2.5 text-left transition-all touch-press focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                        className={`flex min-h-[48px] items-center gap-3 rounded-lg border p-2.5 text-left transition-all touch-press focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
                           isSelected
-                            ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/30'
-                            : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/60 shadow-xs'
+                            ? 'border-[#55534F] bg-[#FAF9F6] ring-2 ring-[#55534F]/20'
+                            : 'border-[#E3E1DC] bg-white hover:border-[#D0CECA] hover:bg-[#FAF9F6]'
                         }`}
                       >
                         {/* Swatch color bubble with concentric ring if selected */}
                         <span
-                          className={`h-6 w-6 shrink-0 rounded-full border border-slate-300 shadow-xs ${
-                            isSelected ? 'ring-2 ring-blue-600 ring-offset-2' : ''
+                          className={`h-6 w-6 shrink-0 rounded-full border border-black/10 shadow-xs ${
+                            isSelected ? 'ring-2 ring-[#55534F] ring-offset-2' : ''
                           }`}
                           style={{ backgroundColor: preset.hex }}
                           aria-hidden="true"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-slate-900 truncate">
+                          <p className="text-xs font-semibold text-[#393834] truncate">
                             {preset.name}
                           </p>
-                          <p className="text-[11px] font-mono text-slate-400 tabular-nums">
+                          <p className="text-[11px] font-mono text-[#777570] tabular-nums">
                             {preset.hex}
                           </p>
                         </div>
@@ -248,17 +239,17 @@ export const ColorStep: React.FC<ColorStepProps> = ({
               </div>
 
               {/* Custom Color Selector */}
-              <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5">
-                <label htmlFor="custom-color-hex" className="text-xs font-bold text-slate-700">
+              <div className="rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3.5">
+                <label htmlFor="custom-color-hex" className="text-xs font-semibold text-[#393834]">
                   Custom Solid Color
                 </label>
-                <p className="mt-0.5 text-[11px] text-slate-500">
-                  Pick any custom color for badges, school forms, or specific agency requirements.
+                <p className="mt-0.5 text-[11px] text-[#777570]">
+                  Pick any custom color for badges, forms, or specific agency requirements.
                 </p>
 
                 <div className="mt-2.5 flex items-center gap-2.5">
                   {/* Native Color Picker Bubble */}
-                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-slate-300 shadow-xs">
+                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-[#E3E1DC] shadow-xs">
                     <input
                       type="color"
                       id="custom-color-picker"
@@ -278,7 +269,7 @@ export const ColorStep: React.FC<ColorStepProps> = ({
                       onChange={handleCustomHexChange}
                       placeholder="#FFFFFF"
                       maxLength={7}
-                      className="w-full min-h-[42px] rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs text-slate-900 uppercase tabular-nums focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:border-blue-600"
+                      className="w-full min-h-[42px] rounded-lg border border-[#E3E1DC] bg-white px-3 py-1.5 font-mono text-xs text-[#393834] uppercase tabular-nums focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none"
                     />
                   </div>
                 </div>
@@ -293,11 +284,11 @@ export const ColorStep: React.FC<ColorStepProps> = ({
           )}
 
           {/* Action Navigation Footer */}
-          <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
+          <div className="flex flex-col gap-2.5 pt-3 border-t border-[#E3E1DC]">
             <button
               type="button"
               onClick={onProceedToDimensions}
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 touch-press"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#55534F] hover:bg-[#45433F] active:bg-[#383633] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:ring-offset-2 focus-visible:outline-none touch-press"
             >
               <span>Continue to Dimensions</span>
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -308,7 +299,7 @@ export const ColorStep: React.FC<ColorStepProps> = ({
             <button
               type="button"
               onClick={onBackToBackground}
-              className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 touch-press"
+              className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

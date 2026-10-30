@@ -162,37 +162,34 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
     Math.abs(activeHeightMm - PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS.heightMm) < 0.1;
 
   return (
-    <div className="w-full rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-5 shadow-xs">
+    <div className="w-full rounded-xl border border-[#E3E1DC] bg-white p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       {/* Step Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#E3E1DC] pb-3 sm:pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white tabular-nums">
-              5
-            </span>
-            <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#393834]">
               Physical Photo Dimensions
             </h2>
             {isProvisionalDefault && (
-              <span className="hidden sm:inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 border border-slate-200">
+              <span className="hidden sm:inline-flex rounded-md bg-[#FAF9F6] px-2 py-0.5 text-xs font-medium text-[#777570] border border-[#E3E1DC]">
                 Default 35 × 45 mm
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-1 text-xs sm:text-sm text-[#777570]">
             Set the exact physical print dimensions for your portrait photo in millimeters or inches.
           </p>
         </div>
 
         {/* Unit Toggle Switch */}
-        <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 self-start sm:self-auto">
+        <div className="flex items-center gap-1 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-1 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => handleUnitToggle('mm')}
-            className={`min-h-[34px] min-w-[44px] rounded-md px-3 py-1 text-xs font-semibold transition-all touch-press focus-visible:ring-2 focus-visible:ring-blue-600 ${
+            className={`min-h-[34px] min-w-[44px] rounded-md px-3 py-1 text-xs font-semibold transition-all touch-press focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
               unit === 'mm'
-                ? 'bg-white text-blue-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-[#393834] shadow-xs'
+                : 'text-[#777570] hover:text-[#393834]'
             }`}
             aria-pressed={unit === 'mm'}
           >
@@ -201,10 +198,10 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
           <button
             type="button"
             onClick={() => handleUnitToggle('in')}
-            className={`min-h-[34px] min-w-[44px] rounded-md px-3 py-1 text-xs font-semibold transition-all touch-press focus-visible:ring-2 focus-visible:ring-blue-600 ${
+            className={`min-h-[34px] min-w-[44px] rounded-md px-3 py-1 text-xs font-semibold transition-all touch-press focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
               unit === 'in'
-                ? 'bg-white text-blue-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-[#393834] shadow-xs'
+                : 'text-[#777570] hover:text-[#393834]'
             }`}
             aria-pressed={unit === 'in'}
           >
@@ -216,39 +213,35 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
       {/* Main Content Layout */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
         {/* Left Preview Stage (md:col-span-5) */}
-        <div className="md:col-span-5 flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-4 min-h-[260px] sm:min-h-[320px]">
-          <div className="relative max-h-[280px] max-w-full overflow-hidden rounded-lg shadow-xs bg-white">
+        <div className="md:col-span-5 flex flex-col items-center justify-center rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-4 min-h-[260px] sm:min-h-[320px]">
+          <div className="relative max-h-[280px] max-w-full overflow-hidden rounded-lg shadow-sm bg-white border border-[#E3E1DC]">
             <img
               src={previewPhotoUrl}
               alt="Portrait print preview"
               className="max-h-[260px] max-w-full object-contain rounded-lg"
-              style={{
-                outline: '1px solid rgba(0, 0, 0, 0.08)',
-                outlineOffset: '-1px',
-              }}
             />
           </div>
 
           {/* Physical Size Overlay Pill */}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-xs text-slate-700">
-            <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 shadow-xs">
-              <span className="text-slate-400 mr-1 text-[11px]">Print Size:</span>
-              <span className="font-bold text-slate-900 font-mono tabular-nums">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-xs text-[#55534F]">
+            <span className="rounded-md border border-[#E3E1DC] bg-white px-2.5 py-1 shadow-xs">
+              <span className="text-[#777570] mr-1 text-[11px]">Print Size:</span>
+              <span className="font-bold text-[#393834] font-mono tabular-nums">
                 {activeWidthMm.toFixed(1)} × {activeHeightMm.toFixed(1)} mm
               </span>
-              <span className="text-slate-400 ml-1 font-mono text-[11px] tabular-nums">
+              <span className="text-[#777570] ml-1 font-mono text-[11px] tabular-nums">
                 ({activeWidthIn} × {activeHeightIn} in)
               </span>
             </span>
-            <span className="rounded-md border border-slate-200 bg-white px-2 py-1 shadow-xs text-[11px]">
-              <span className="text-slate-400 mr-1">Background:</span>
-              <span className="font-medium text-slate-800">
+            <span className="rounded-md border border-[#E3E1DC] bg-white px-2 py-1 shadow-xs text-[11px]">
+              <span className="text-[#777570] mr-1">Background:</span>
+              <span className="font-medium text-[#393834]">
                 {isBackgroundSkipped ? 'Original' : selectedColorHex}
               </span>
             </span>
           </div>
 
-          <p className="mt-1 text-[11px] text-slate-400 font-mono tabular-nums">
+          <p className="mt-1 text-xs text-[#777570] font-mono tabular-nums">
             Aspect Ratio: {formatAspectRatioDisplay(activeWidthMm, activeHeightMm)}
           </p>
         </div>
@@ -261,7 +254,7 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {/* Width Input */}
                 <div>
-                  <label htmlFor="photo-width-input" className="block text-xs font-bold text-slate-700">
+                  <label htmlFor="photo-width-input" className="block text-xs font-semibold text-[#393834]">
                     Width ({unit})
                   </label>
                   <div className="mt-1.5 relative">
@@ -276,13 +269,13 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
                       onChange={handleWidthChange}
                       aria-invalid={Boolean(validation.widthError)}
                       aria-describedby={validation.widthError ? 'width-error-msg' : undefined}
-                      className={`w-full min-h-[44px] rounded-lg border bg-white px-3 py-2 font-mono text-sm font-semibold text-slate-900 tabular-nums focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                      className={`w-full min-h-[44px] rounded-lg border bg-white px-3 py-2 font-mono text-sm font-semibold text-[#393834] tabular-nums focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
                         validation.widthError
                           ? 'border-red-400 focus-visible:border-red-500 ring-1 ring-red-300'
-                          : 'border-slate-300'
+                          : 'border-[#E3E1DC]'
                       }`}
                     />
-                    <span className="absolute right-3 top-3 text-xs font-bold text-slate-400 pointer-events-none">
+                    <span className="absolute right-3 top-3 text-xs font-medium text-[#777570] pointer-events-none">
                       {unit}
                     </span>
                   </div>
@@ -295,7 +288,7 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
 
                 {/* Height Input */}
                 <div>
-                  <label htmlFor="photo-height-input" className="block text-xs font-bold text-slate-700">
+                  <label htmlFor="photo-height-input" className="block text-xs font-semibold text-[#393834]">
                     Height ({unit})
                   </label>
                   <div className="mt-1.5 relative">
@@ -310,13 +303,13 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
                       onChange={handleHeightChange}
                       aria-invalid={Boolean(validation.heightError)}
                       aria-describedby={validation.heightError ? 'height-error-msg' : undefined}
-                      className={`w-full min-h-[44px] rounded-lg border bg-white px-3 py-2 font-mono text-sm font-semibold text-slate-900 tabular-nums focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                      className={`w-full min-h-[44px] rounded-lg border bg-white px-3 py-2 font-mono text-sm font-semibold text-[#393834] tabular-nums focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
                         validation.heightError
                           ? 'border-red-400 focus-visible:border-red-500 ring-1 ring-red-300'
-                          : 'border-slate-300'
+                          : 'border-[#E3E1DC]'
                       }`}
                     />
-                    <span className="absolute right-3 top-3 text-xs font-bold text-slate-400 pointer-events-none">
+                    <span className="absolute right-3 top-3 text-xs font-medium text-[#777570] pointer-events-none">
                       {unit}
                     </span>
                   </div>
@@ -329,7 +322,7 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
               </div>
 
               {/* Physical Bounds Guide */}
-              <p className="mt-1.5 text-[11px] text-slate-400 tabular-nums">
+              <p className="mt-1.5 text-xs text-[#777570] tabular-nums">
                 Allowed physical range: {MIN_PHOTO_DIMENSION_MM} – {MAX_PHOTO_DIMENSION_MM} mm{' '}
                 ({mmToInches(MIN_PHOTO_DIMENSION_MM).toFixed(2)} – {mmToInches(MAX_PHOTO_DIMENSION_MM).toFixed(2)} in).
               </p>
@@ -338,20 +331,20 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
             {/* Quick Common Dimensions Buttons */}
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-[#393834]">
                   Common Dimensions
                 </span>
                 {!isProvisionalDefault && (
                   <button
                     type="button"
                     onClick={handleResetToProvisional}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 touch-press"
+                    className="text-xs font-medium text-[#55534F] hover:text-[#393834] underline touch-press"
                   >
                     Reset to 35 × 45 mm
                   </button>
                 )}
               </div>
-              <p className="mt-0.5 text-[11px] text-slate-500">
+              <p className="mt-0.5 text-xs text-[#777570]">
                 Quick convenience formats for applications and cards:
               </p>
 
@@ -366,14 +359,14 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
                       key={opt.label}
                       type="button"
                       onClick={() => handleApplyQuickSize(opt)}
-                      className={`flex min-h-[44px] flex-col justify-center rounded-xl border p-2.5 text-left transition-all touch-press focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                      className={`flex min-h-[44px] flex-col justify-center rounded-lg border p-2.5 text-left transition-all touch-press focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
                         isCurrent
-                          ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/30'
-                          : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/60 shadow-xs'
+                          ? 'border-[#55534F] bg-[#FAF9F6] ring-2 ring-[#55534F]/20'
+                          : 'border-[#E3E1DC] bg-white hover:border-[#D0CECA] hover:bg-[#FAF9F6]'
                       }`}
                     >
-                      <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">{opt.label}</span>
-                      <span className="text-[10px] text-slate-500 leading-tight truncate">{opt.description}</span>
+                      <span className="text-xs font-semibold text-[#393834] font-mono tabular-nums">{opt.label}</span>
+                      <span className="text-[11px] text-[#777570] leading-tight truncate">{opt.description}</span>
                     </button>
                   );
                 })}
@@ -382,12 +375,12 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
           </div>
 
           {/* Action Footer */}
-          <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
+          <div className="flex flex-col gap-2.5 pt-3 border-t border-[#E3E1DC]">
             <button
               type="button"
               onClick={onProceedToSheetLayout}
               disabled={!validation.isValid}
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 disabled:opacity-50 disabled:cursor-not-allowed touch-press"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#55534F] hover:bg-[#45433F] active:bg-[#383633] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed touch-press"
             >
               <span>Continue to Sheet Layout</span>
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -399,7 +392,7 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
               <button
                 type="button"
                 onClick={onBackToPreviousStep}
-                className="inline-flex min-h-[44px] items-center justify-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 touch-press"
+                className="inline-flex min-h-[44px] items-center justify-center gap-1 rounded-lg border border-[#E3E1DC] bg-white px-2 py-2 text-xs font-medium text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
               >
                 <span>{isBackgroundSkipped ? 'Back' : 'Back to Color'}</span>
               </button>
@@ -407,7 +400,7 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
               <button
                 type="button"
                 onClick={onReCropPhoto}
-                className="inline-flex min-h-[44px] items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 touch-press"
+                className="inline-flex min-h-[44px] items-center justify-center gap-1 rounded-lg border border-[#E3E1DC] bg-white px-2 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
               >
                 Re-Crop
               </button>
@@ -415,7 +408,7 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
               <button
                 type="button"
                 onClick={onReplacePhoto}
-                className="inline-flex min-h-[44px] items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 touch-press"
+                className="inline-flex min-h-[44px] items-center justify-center gap-1 rounded-lg border border-[#E3E1DC] bg-white px-2 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
               >
                 Change Photo
               </button>

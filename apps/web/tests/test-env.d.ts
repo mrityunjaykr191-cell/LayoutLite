@@ -12,3 +12,16 @@ declare module 'node:assert/strict' {
   };
   export default assert;
 }
+
+declare module 'node:fs' {
+  export function readFileSync(path: string, encoding: string): string;
+}
+
+declare module 'node:path' {
+  export function resolve(...paths: string[]): string;
+}
+
+interface ImportMeta {
+  dirname: string;
+}
+

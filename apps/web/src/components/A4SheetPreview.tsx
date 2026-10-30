@@ -5,6 +5,7 @@ export interface A4SheetPreviewProps {
   readonly layoutResult: SheetLayoutResult;
   readonly photoUrl: string;
   readonly showCutGuides?: boolean;
+  readonly showCalibrationRuler?: boolean;
   readonly selectedPhotoIndex?: number | null;
   readonly onSelectPhoto?: (index: number | null) => void;
   readonly interactive?: boolean;
@@ -15,6 +16,7 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
   layoutResult,
   photoUrl,
   showCutGuides,
+  showCalibrationRuler = false,
   selectedPhotoIndex = null,
   onSelectPhoto,
   interactive = Boolean(onSelectPhoto),
@@ -24,15 +26,15 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
   const sheetW = sheetDimensions.widthMm;
   const sheetH = sheetDimensions.heightMm;
 
-  const shouldRenderCutGuides = showCutGuides !== undefined
-    ? showCutGuides
-    : (layoutResult.includeCutGuides ?? false);
-
   // 50 mm calibration ruler preview positioning in bottom margin
   const rulerWidthMm = 50;
   const rulerHeightMm = 4;
   const rulerXMm = (sheetW - rulerWidthMm) / 2;
   const rulerYMm = sheetH - 9; // 9 mm above sheet bottom edge
+
+  const shouldRenderCutGuides = showCutGuides !== undefined
+    ? showCutGuides
+    : (layoutResult.includeCutGuides ?? false);
 
   const handlePhotoClick = (e: React.MouseEvent, index: number) => {
     if (!interactive || !onSelectPhoto) return;
@@ -125,15 +127,15 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
                   preserveAspectRatio="none"
                 />
 
-                {/* Subtle photo boundary outline for optical alignment */}
+                {/* Photo boundary outline for optical alignment */}
                 <rect
                   x={photo.xMm}
                   y={photo.yMm}
                   width={photo.widthMm}
                   height={photo.heightMm}
                   fill="none"
-                  stroke={isSelected ? '#2563eb' : '#94a3b8'}
-                  strokeWidth={isSelected ? '0.7' : '0.15'}
+                  stroke={isSelected ? '#393834' : '#d4d4d8'}
+                  strokeWidth={isSelected ? '0.75' : '0.2'}
                 />
 
                 {/* Active Selection Highlight Overlay */}
@@ -143,9 +145,9 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
                     y={photo.yMm}
                     width={photo.widthMm}
                     height={photo.heightMm}
-                    fill="#2563eb"
-                    fillOpacity="0.16"
-                    stroke="#2563eb"
+                    fill="#393834"
+                    fillOpacity="0.12"
+                    stroke="#393834"
                     strokeWidth="0.75"
                   />
                 )}
@@ -215,29 +217,31 @@ export const A4SheetPreview: React.FC<A4SheetPreviewProps> = ({
           })}
 
           {/* 50 mm Calibration Verification Ruler Preview (Bottom Margin) */}
-          <g transform={`translate(${rulerXMm}, ${rulerYMm})`}>
-            {/* Main Baseline */}
-            <line x1="0" y1={rulerHeightMm} x2={rulerWidthMm} y2={rulerHeightMm} stroke="#64748b" strokeWidth="0.3" />
-            {/* 10mm Major Ticks */}
-            {[0, 10, 20, 30, 40, 50].map((t) => (
-              <line key={`tick-${t}`} x1={t} y1="0.5" x2={t} y2={rulerHeightMm} stroke="#64748b" strokeWidth="0.3" />
-            ))}
-            {/* 5mm Minor Ticks */}
-            {[5, 15, 25, 35, 45].map((t) => (
-              <line key={`subtick-${t}`} x1={t} y1="2" x2={t} y2={rulerHeightMm} stroke="#94a3b8" strokeWidth="0.2" />
-            ))}
-            {/* Ruler Label */}
-            <text
-              x={rulerWidthMm / 2}
-              y="-1"
-              fontSize="2.2"
-              fill="#64748b"
-              textAnchor="middle"
-              fontFamily="system-ui, -apple-system, sans-serif"
-            >
-              50 mm Calibration Ruler (100% Scale Check)
-            </text>
-          </g>
+          {showCalibrationRuler && (
+            <g transform={`translate(${rulerXMm}, ${rulerYMm})`}>
+              {/* Main Baseline */}
+              <line x1="0" y1={rulerHeightMm} x2={rulerWidthMm} y2={rulerHeightMm} stroke="#64748b" strokeWidth="0.3" />
+              {/* 10mm Major Ticks */}
+              {[0, 10, 20, 30, 40, 50].map((t) => (
+                <line key={`tick-${t}`} x1={t} y1="0.5" x2={t} y2={rulerHeightMm} stroke="#64748b" strokeWidth="0.3" />
+              ))}
+              {/* 5mm Minor Ticks */}
+              {[5, 15, 25, 35, 45].map((t) => (
+                <line key={`subtick-${t}`} x1={t} y1="2" x2={t} y2={rulerHeightMm} stroke="#94a3b8" strokeWidth="0.2" />
+              ))}
+              {/* Ruler Label */}
+              <text
+                x={rulerWidthMm / 2}
+                y="-1"
+                fontSize="2.2"
+                fill="#64748b"
+                textAnchor="middle"
+                fontFamily="system-ui, -apple-system, sans-serif"
+              >
+                50 mm Calibration Ruler (100% Scale Check)
+              </text>
+            </g>
+          )}
         </svg>
 
         {/* Visual Overlay Banner When Layout Exceeds Page Capacity */}

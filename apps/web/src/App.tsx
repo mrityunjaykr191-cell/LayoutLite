@@ -244,7 +244,7 @@ export const App: React.FC = () => {
     : activeWorkflowStep;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-900 antialiased">
+    <div className="flex min-h-dvh flex-col bg-[#F5F4F1] text-[#393834] antialiased">
       {/* Top Application Header */}
       <Header />
 
@@ -256,18 +256,13 @@ export const App: React.FC = () => {
         <div className="flex flex-col gap-4 sm:gap-6">
           {/* STEP 1: Upload Photo Dropzone */}
           {!rawPhoto && (
-            <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col gap-5 sm:gap-6">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-blue-600 text-[11px] sm:text-xs font-bold text-white tabular-nums">
-                    1
-                  </span>
-                  <h2 className="text-base font-bold text-slate-900 sm:text-lg">
-                    Select Portrait Photo
-                  </h2>
-                </div>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  Upload a clear portrait photo to crop, prepare, and tile for physical printing.
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#393834]">
+                  Upload Portrait Photo
+                </h2>
+                <p className="mt-1 text-xs sm:text-sm text-[#777570]">
+                  Select a front-facing headshot to crop, frame, and tile for physical printing.
                 </p>
               </div>
 

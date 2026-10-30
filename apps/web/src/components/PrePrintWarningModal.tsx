@@ -70,7 +70,7 @@ export const PrePrintWarningModal: React.FC<PrePrintWarningModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150 no-print"
       onClick={onCancel}
       role="presentation"
     >
@@ -81,21 +81,21 @@ export const PrePrintWarningModal: React.FC<PrePrintWarningModalProps> = ({
         aria-labelledby="warning-modal-title"
         aria-describedby="warning-modal-desc"
         onClick={(e) => e.stopPropagation()}
-        className="relative flex flex-col max-h-[92dvh] w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200/80 overflow-hidden"
+        className="relative flex flex-col max-h-[92dvh] w-full max-w-lg rounded-xl bg-white shadow-2xl border border-[#E3E1DC] overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3.5 sm:px-6">
+        <div className="flex items-center justify-between border-b border-[#E3E1DC] px-4 py-3.5 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-800">
               <svg className="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </span>
             <div>
-              <h3 id="warning-modal-title" className="text-sm font-bold text-slate-900 sm:text-base">
+              <h3 id="warning-modal-title" className="text-sm font-semibold text-[#393834] sm:text-base">
                 Printer Scale Verification
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-[#777570]">
                 Action required in your printer settings window
               </p>
             </div>
@@ -105,66 +105,68 @@ export const PrePrintWarningModal: React.FC<PrePrintWarningModalProps> = ({
             ref={closeButtonRef}
             type="button"
             onClick={onCancel}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 touch-press focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#777570] hover:bg-[#FAF9F6] hover:text-[#393834] touch-press focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none"
             aria-label="Close dialog"
           >
-            ✕
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="m6 6 12 12M18 6 6 18" />
+            </svg>
           </button>
         </div>
 
         {/* Modal Scrollable Body */}
-        <div id="warning-modal-desc" className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 text-xs text-slate-700">
-          <p className="leading-relaxed text-slate-600 text-xs sm:text-[13px]">
-            Web applications cannot control your printer settings automatically. When your print dialog appears, verify that your printer scale is set to <strong className="text-slate-900 font-semibold">100% (Actual Size)</strong>.
+        <div id="warning-modal-desc" className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 text-xs text-[#393834]">
+          <p className="leading-relaxed text-[#777570] text-xs sm:text-[13px]">
+            Web applications cannot control your printer settings automatically. When your print dialog appears, verify that your printer scale is set to <strong className="text-[#393834] font-semibold">100% (Actual Size)</strong>.
           </p>
 
           {/* Scale Comparison: Stacked on narrow phones (< 640px), Side-by-side on sm+ (>= 640px) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {/* Correct Setting */}
-            <div className="flex flex-col gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-emerald-900 font-bold text-xs">
-                <span className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px]">
-                  ✓
-                </span>
+            <div className="flex flex-col gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-emerald-950 font-semibold text-xs">
+                <svg className="h-4 w-4 shrink-0 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m5 12 4 4L19 6" />
+                </svg>
                 <span>Correct: 100% Scale</span>
               </div>
-              <p className="text-[11px] text-emerald-800 leading-normal">
+              <p className="text-[11px] text-emerald-900 leading-normal">
                 Choose <strong>&ldquo;100%&rdquo;</strong> or <strong>&ldquo;Actual Size&rdquo;</strong> in the printer dialog to preserve exact physical millimeters.
               </p>
             </div>
 
             {/* Incorrect Setting */}
-            <div className="flex flex-col gap-1.5 rounded-xl border border-rose-200 bg-rose-50/70 p-3 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-rose-900 font-bold text-xs">
-                <span className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-rose-600 text-white text-[10px]">
-                  ✕
-                </span>
+            <div className="flex flex-col gap-1.5 rounded-lg border border-red-200 bg-red-50/70 p-3 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-red-950 font-semibold text-xs">
+                <svg className="h-4 w-4 shrink-0 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M18 6 6 18" />
+                </svg>
                 <span>Do Not Use: Fit to Page</span>
               </div>
-              <p className="text-[11px] text-rose-800 leading-normal">
+              <p className="text-[11px] text-red-900 leading-normal">
                 Avoid <strong>&ldquo;Fit to Page&rdquo;</strong> or <strong>&ldquo;Shrink to Printable Area&rdquo;</strong>, which shrinks photos by 5% to 8%.
               </p>
             </div>
           </div>
 
           {/* 50 mm Ruler Instruction Callout */}
-          <div className="flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-blue-950 shadow-2xs">
-            <svg className="h-4.5 w-4.5 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <div className="flex items-start gap-2.5 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3 text-[#55534F] shadow-2xs">
+            <svg className="h-4.5 w-4.5 text-[#777570] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <div className="text-[11px] leading-relaxed">
-              <strong className="block font-semibold text-blue-900 mb-0.5">Physical Ruler Verification:</strong>
-              A calibrated <strong>50 mm ruler</strong> is printed in the bottom margin of the A4 page. Measure it with a real physical ruler after printing to verify physical 1:1 scale.
+            <div className="text-xs leading-relaxed text-[#777570]">
+              <strong className="block font-semibold text-[#393834] mb-0.5">Physical Ruler Verification:</strong>
+              A calibrated <strong>50 mm ruler</strong> can be printed in the bottom margin of the A4 page. Measure it with a real physical ruler after printing to verify physical 1:1 scale.
             </div>
           </div>
         </div>
 
         {/* Modal Action Buttons Footer */}
-        <div className="border-t border-slate-100 bg-slate-50/50 px-4 py-3 sm:px-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5">
+        <div className="border-t border-[#E3E1DC] bg-[#FAF9F6] px-4 py-3 sm:px-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5">
           <button
             type="button"
             onClick={onCancel}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 touch-press focus-visible:ring-2 focus-visible:ring-blue-600 shadow-2xs"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#E3E1DC] bg-white px-4 py-2 text-xs font-semibold text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] touch-press focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none shadow-2xs"
           >
             Cancel
           </button>
@@ -172,7 +174,7 @@ export const PrePrintWarningModal: React.FC<PrePrintWarningModalProps> = ({
             ref={confirmButtonRef}
             type="button"
             onClick={onConfirm}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 touch-press focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#55534F] hover:bg-[#45433F] active:bg-[#383633] px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] touch-press focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             {actionType === 'download' ? 'Understood — Download PDF' : 'Understood — Open Print Dialog'}
           </button>

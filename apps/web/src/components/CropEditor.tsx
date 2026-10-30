@@ -366,26 +366,21 @@ export const CropEditor: React.FC<CropEditorProps> = ({
   };
 
   return (
-    <div className="w-full rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-5 shadow-xs">
+    <div className="w-full rounded-xl border border-[#E3E1DC] bg-white p-3.5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       {/* Header bar */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#E3E1DC] pb-3 sm:pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white tabular-nums">
-              2
-            </span>
-            <h2 className="text-base font-bold text-slate-900 sm:text-lg">
-              Frame and Crop Photo
-            </h2>
-          </div>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Drag frame to position. Drag corner or edge handles to resize.
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#393834]">
+            Frame &amp; Crop Photo
+          </h2>
+          <p className="mt-1 text-xs sm:text-sm text-[#777570]">
+            Drag the frame to position. Drag corner or edge handles to resize.
           </p>
         </div>
 
         {/* Physical Dimension Aspect Tag */}
-        <div className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-mono font-medium text-slate-700 tabular-nums">
-          <span className="font-sans text-slate-400 font-normal">Aspect:</span>
+        <div className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-[#E3E1DC] bg-[#FAF9F6] px-2.5 py-1 text-xs font-mono font-medium text-[#55534F] tabular-nums">
+          <span className="font-sans text-[#777570] font-normal">Aspect:</span>
           <span>
             {photoDimensions.widthMm} × {photoDimensions.heightMm} mm
           </span>
@@ -397,7 +392,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
         <div
           role="alert"
           aria-live="polite"
-          className="mt-3.5 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-xs sm:text-sm text-red-900"
+          className="mt-3.5 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50/80 p-3 text-xs sm:text-sm text-red-900"
         >
           <svg
             className="mt-0.5 h-4 w-4 shrink-0 text-red-600"
@@ -429,7 +424,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        className="relative mt-3 h-[300px] sm:h-[420px] w-full overflow-hidden rounded-xl bg-slate-950 select-none touch-pan-y focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="relative mt-3.5 sm:mt-4 h-[280px] sm:h-[370px] w-full overflow-hidden rounded-lg bg-[#18181b] border border-[#E3E1DC] select-none touch-pan-y focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none"
       >
         {/* Rendered Source Image with 2D transform */}
         <div
@@ -454,14 +449,14 @@ export const CropEditor: React.FC<CropEditorProps> = ({
         {/* Resizable, Draggable Crop Frame with Scrim Overlay */}
         {activeCropBox.width > 0 && activeCropBox.height > 0 && (
           <div
-            className="absolute rounded-xs z-10"
+            className="absolute rounded-[2px] z-10"
             style={{
               left: `${activeCropBox.x}px`,
               top: `${activeCropBox.y}px`,
               width: `${activeCropBox.width}px`,
               height: `${activeCropBox.height}px`,
-              // Gigantic box shadow creates seamless dimmed scrim outside crop frame
-              boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.65)',
+              // Box shadow creates seamless dimmed scrim outside crop frame
+              boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
               border: '2px solid rgba(255, 255, 255, 0.95)',
             }}
           >
@@ -475,15 +470,15 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               title="Drag to reposition crop"
             >
               {/* Rule of Thirds Guide Grid */}
-              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-40">
-                <div className="border-r border-b border-white/40" />
-                <div className="border-r border-b border-white/40" />
-                <div className="border-b border-white/40" />
-                <div className="border-r border-b border-white/40" />
-                <div className="border-r border-b border-white/40" />
-                <div className="border-b border-white/40" />
-                <div className="border-r border-b border-white/40" />
-                <div className="border-r border-b border-white/40" />
+              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-35">
+                <div className="border-r border-b border-white" />
+                <div className="border-r border-b border-white" />
+                <div className="border-b border-white" />
+                <div className="border-r border-b border-white" />
+                <div className="border-r border-b border-white" />
+                <div className="border-b border-white" />
+                <div className="border-r border-b border-white" />
+                <div className="border-r border-b border-white" />
                 <div />
               </div>
             </div>
@@ -500,7 +495,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               aria-label="Resize crop from top-left corner"
               title="Resize crop (preserves aspect ratio)"
             >
-              <div className="h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-xs border-2 border-blue-600 bg-white shadow-md ring-1 ring-black/20 hover:scale-125 transition-transform" />
+              <div className="h-3.5 w-3.5 rounded-[2px] border-2 border-[#393834] bg-white shadow-sm ring-1 ring-black/20 hover:scale-125 transition-transform" />
             </div>
 
             {/* Corner: Top-Right (NE) */}
@@ -513,7 +508,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               aria-label="Resize crop from top-right corner"
               title="Resize crop (preserves aspect ratio)"
             >
-              <div className="h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-xs border-2 border-blue-600 bg-white shadow-md ring-1 ring-black/20 hover:scale-125 transition-transform" />
+              <div className="h-3.5 w-3.5 rounded-[2px] border-2 border-[#393834] bg-white shadow-sm ring-1 ring-black/20 hover:scale-125 transition-transform" />
             </div>
 
             {/* Corner: Bottom-Right (SE) */}
@@ -526,7 +521,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               aria-label="Resize crop from bottom-right corner"
               title="Resize crop (preserves aspect ratio)"
             >
-              <div className="h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-xs border-2 border-blue-600 bg-white shadow-md ring-1 ring-black/20 hover:scale-125 transition-transform" />
+              <div className="h-3.5 w-3.5 rounded-[2px] border-2 border-[#393834] bg-white shadow-sm ring-1 ring-black/20 hover:scale-125 transition-transform" />
             </div>
 
             {/* Corner: Bottom-Left (SW) */}
@@ -539,7 +534,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               aria-label="Resize crop from bottom-left corner"
               title="Resize crop (preserves aspect ratio)"
             >
-              <div className="h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-xs border-2 border-blue-600 bg-white shadow-md ring-1 ring-black/20 hover:scale-125 transition-transform" />
+              <div className="h-3.5 w-3.5 rounded-[2px] border-2 border-[#393834] bg-white shadow-sm ring-1 ring-black/20 hover:scale-125 transition-transform" />
             </div>
 
             {/* Edge: Top (N) */}
@@ -552,7 +547,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               aria-label="Resize crop from top edge"
               title="Resize crop (preserves aspect ratio)"
             >
-              <div className="h-1.5 w-5 rounded-full border border-blue-600 bg-white shadow-md ring-1 ring-black/20 hover:scale-125 transition-transform" />
+              <div className="h-1.5 w-5 sm:w-6 rounded-full border border-[#393834] bg-white shadow-sm ring-1 ring-black/20 hover:scale-125 transition-transform" />
             </div>
 
             {/* Edge: Bottom (S) */}
@@ -565,7 +560,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               aria-label="Resize crop from bottom edge"
               title="Resize crop (preserves aspect ratio)"
             >
-              <div className="h-1.5 w-5 rounded-full border border-blue-600 bg-white shadow-md ring-1 ring-black/20 hover:scale-125 transition-transform" />
+              <div className="h-1.5 w-5 sm:w-6 rounded-full border border-[#393834] bg-white shadow-sm ring-1 ring-black/20 hover:scale-125 transition-transform" />
             </div>
 
             {/* Edge: Left (W) */}
@@ -578,7 +573,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               aria-label="Resize crop from left edge"
               title="Resize crop (preserves aspect ratio)"
             >
-              <div className="h-5 w-1.5 rounded-full border border-blue-600 bg-white shadow-md ring-1 ring-black/20 hover:scale-125 transition-transform" />
+              <div className="h-5 sm:h-6 w-1.5 rounded-full border border-[#393834] bg-white shadow-sm ring-1 ring-black/20 hover:scale-125 transition-transform" />
             </div>
 
             {/* Edge: Right (E) */}
@@ -591,77 +586,65 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               aria-label="Resize crop from right edge"
               title="Resize crop (preserves aspect ratio)"
             >
-              <div className="h-5 w-1.5 rounded-full border border-blue-600 bg-white shadow-md ring-1 ring-black/20 hover:scale-125 transition-transform" />
+              <div className="h-5 sm:h-6 w-1.5 rounded-full border border-[#393834] bg-white shadow-sm ring-1 ring-black/20 hover:scale-125 transition-transform" />
             </div>
           </div>
         )}
-
-        {/* Drag & Gesture Hint Overlay */}
-        <div className="absolute bottom-2.5 left-2.5 rounded-md bg-slate-900/85 px-2.5 py-1 text-[11px] font-medium text-slate-300 pointer-events-none backdrop-blur-xs">
-          <span className="hidden sm:inline">
-            Drag frame to reposition • Drag handles to resize • Ctrl + scroll or use slider to zoom
-          </span>
-          <span className="inline sm:hidden">
-            Drag frame to move • Drag handles to resize
-          </span>
-        </div>
       </div>
 
       {/* Control Toolbar */}
-      <div className="mt-3.5 flex flex-col gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 sm:p-3.5">
-        {/* Zoom Slider Row */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <label
-            htmlFor="crop-zoom-slider"
-            className="text-xs font-semibold text-slate-700 shrink-0 flex items-center gap-1.5"
-          >
-            <span>Zoom</span>
-            <span className="font-mono font-bold text-blue-700 tabular-nums">{cropSettings.zoom.toFixed(1)}×</span>
-          </label>
+      <div className="mt-3.5 sm:mt-4 flex flex-col gap-3 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3 sm:p-4">
+        {/* Zoom Controls */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#393834]">
+            <label htmlFor="crop-zoom-slider" className="cursor-pointer">Zoom</label>
+            <span className="font-mono font-medium text-[#55534F] tabular-nums">{cropSettings.zoom.toFixed(1)}×</span>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => handleZoomChange(cropSettings.zoom - 0.1)}
+              disabled={cropSettings.zoom <= MIN_ZOOM}
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-[#E3E1DC] bg-white text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] disabled:opacity-40 disabled:pointer-events-none font-bold text-base focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+              aria-label="Zoom out"
+            >
+              −
+            </button>
 
-          <button
-            type="button"
-            onClick={() => handleZoomChange(cropSettings.zoom - 0.1)}
-            disabled={cropSettings.zoom <= MIN_ZOOM}
-            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none font-bold text-base focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
-            aria-label="Zoom out"
-          >
-            −
-          </button>
+            <input
+              id="crop-zoom-slider"
+              type="range"
+              min={MIN_ZOOM}
+              max={MAX_ZOOM}
+              step={0.05}
+              value={cropSettings.zoom}
+              onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+              className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-[#E3E1DC] accent-[#55534F] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none"
+              aria-label="Zoom level"
+            />
 
-          <input
-            id="crop-zoom-slider"
-            type="range"
-            min={MIN_ZOOM}
-            max={MAX_ZOOM}
-            step={0.05}
-            value={cropSettings.zoom}
-            onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
-            className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-slate-200 accent-blue-600 focus-visible:ring-2 focus-visible:ring-blue-600"
-            aria-label="Zoom level"
-          />
-
-          <button
-            type="button"
-            onClick={() => handleZoomChange(cropSettings.zoom + 0.1)}
-            disabled={cropSettings.zoom >= MAX_ZOOM}
-            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none font-bold text-base focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
-            aria-label="Zoom in"
-          >
-            +
-          </button>
+            <button
+              type="button"
+              onClick={() => handleZoomChange(cropSettings.zoom + 0.1)}
+              disabled={cropSettings.zoom >= MAX_ZOOM}
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-[#E3E1DC] bg-white text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] disabled:opacity-40 disabled:pointer-events-none font-bold text-base focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         {/* Rotate and Reset Action Buttons */}
-        <div className="flex items-center justify-between border-t border-slate-200/60 pt-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#E3E1DC] pt-3">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleRotate90}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3.5 py-2 text-xs font-medium text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
             >
               <svg
-                className="h-4 w-4 shrink-0 text-slate-600"
+                className="h-4 w-4 shrink-0 text-[#55534F]"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -676,7 +659,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
               </svg>
               <span>Rotate 90°</span>
               {cropSettings.rotation !== 0 && (
-                <span className="rounded bg-blue-100 px-1 font-mono text-[10px] font-bold text-blue-800 tabular-nums">
+                <span className="rounded bg-[#E3E1DC] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#393834] tabular-nums">
                   {cropSettings.rotation}°
                 </span>
               )}
@@ -685,25 +668,25 @@ export const CropEditor: React.FC<CropEditorProps> = ({
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3.5 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
             >
               <span>Reset</span>
             </button>
           </div>
 
-          <div className="text-[11px] text-slate-400 hidden sm:block">
-            Keyboard: Arrow keys to pan • + / − to zoom
+          <div className="text-xs text-[#777570] hidden sm:block">
+            Arrow keys to pan • + / − to zoom
           </div>
         </div>
       </div>
 
       {/* Action Bar (Cancel / Proceed) */}
-      <div className="mt-4 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-3 border-t border-slate-100">
+      <div className="mt-4 sm:mt-5 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-3.5 sm:pt-4 border-t border-[#E3E1DC]">
         <button
           type="button"
           onClick={onCancel}
           disabled={isExporting}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 touch-press"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#E3E1DC] bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
         >
           Change Photo
         </button>
@@ -712,7 +695,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
           type="button"
           onClick={handleApplyCrop}
           disabled={isExporting}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 touch-press disabled:opacity-50"
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-[#55534F] hover:bg-[#45433F] active:bg-[#383633] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:ring-offset-2 focus-visible:outline-none touch-press disabled:opacity-50"
         >
           {isExporting ? (
             <>

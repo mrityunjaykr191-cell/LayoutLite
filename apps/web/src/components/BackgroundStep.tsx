@@ -102,55 +102,52 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
   const isCutoutActive = Boolean(cutoutUrl);
 
   return (
-    <div className="w-full rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-5 shadow-xs">
+    <div className="w-full rounded-xl border border-[#E3E1DC] bg-white p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       {/* Step Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#E3E1DC] pb-3 sm:pb-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white tabular-nums">
-              3
-            </span>
-            <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#393834]">
               Optional Background Removal
             </h2>
             {isCutoutActive && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 border border-emerald-200">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800 border border-emerald-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
                 Background Removed
               </span>
             )}
             {isBackgroundSkipped && !isCutoutActive && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 border border-slate-200">
-                Original Background Kept
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#FAF9F6] px-2 py-0.5 text-xs font-medium text-[#777570] border border-[#E3E1DC]">
+                Original Kept
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Cleanly isolate the portrait subject with AI, or keep your original photo background.
+          <p className="mt-1 text-xs sm:text-sm text-[#777570]">
+            Isolate the portrait subject with AI, or keep your original photo background.
           </p>
         </div>
 
         {/* Local Service Status Pill */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
           {isCheckingHealth ? (
-            <span className="inline-flex items-center gap-1.5 text-xs text-slate-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 text-xs text-[#777570]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#777570] animate-pulse" />
               Checking service...
             </span>
           ) : health?.ok ? (
             <span
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#E3E1DC] bg-[#FAF9F6] px-2.5 py-1 text-xs font-medium text-[#55534F]"
               title="Local background removal service running at http://127.0.0.1:8000"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
               <span>AI Ready (Local)</span>
             </span>
           ) : (
             <span
-              className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800"
+              className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50/80 px-2.5 py-1 text-xs font-medium text-amber-900"
               title="Local service unreachable at http://127.0.0.1:8000"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-600" aria-hidden="true" />
               <span>AI Service Offline</span>
             </span>
           )}
@@ -160,8 +157,8 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
       {/* Main Content Layout */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
         {/* Left Preview Pane (md:col-span-6) */}
-        <div className="md:col-span-6 flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-4 min-h-[260px] sm:min-h-[320px]">
-          <div className="relative max-h-[300px] max-w-full overflow-hidden rounded-lg shadow-xs bg-white">
+        <div className="md:col-span-6 flex flex-col items-center justify-center rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-4 min-h-[260px] sm:min-h-[320px]">
+          <div className="relative max-h-[300px] max-w-full overflow-hidden rounded-lg shadow-sm bg-white border border-[#E3E1DC]">
             {/* Checkerboard backdrop for transparent PNG */}
             {isCutoutActive && (
               <div
@@ -183,14 +180,10 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
               src={cutoutUrl ?? croppedPhotoUrl}
               alt={isCutoutActive ? 'Portrait with background removed' : 'Cropped portrait'}
               className="relative max-h-[280px] max-w-full object-contain rounded-lg"
-              style={{
-                outline: '1px solid rgba(0, 0, 0, 0.08)',
-                outlineOffset: '-1px',
-              }}
             />
           </div>
 
-          <p className="mt-2 text-[11px] font-medium text-slate-500">
+          <p className="mt-3 text-xs text-[#777570] text-center">
             {isCutoutActive
               ? 'Transparent Cutout (checkerboard indicates transparency)'
               : 'Cropped Portrait (Original Background)'}
@@ -202,22 +195,22 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
           <div className="flex flex-col gap-3">
             {/* Offline Notice (when AI service is not running and cutout not generated) */}
             {!isCheckingHealth && !health?.ok && !isCutoutActive && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-950">
+              <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-950">
                 <div className="flex items-start gap-2.5">
-                  <svg className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   <div className="flex-1">
                     <p className="font-semibold text-amber-950">Local AI Service Not Running</p>
                     <p className="mt-0.5 text-amber-800 leading-relaxed text-[11px]">
-                      The background removal backend is not detected at <code className="font-mono text-amber-900">http://127.0.0.1:8000</code>. You can start it in terminal or simply click &ldquo;Keep Original Background&rdquo; to proceed.
+                      The background removal backend is not detected at <code className="font-mono text-amber-900">http://127.0.0.1:8000</code>. You can start it in your terminal or simply click &ldquo;Keep Original Background&rdquo; to proceed.
                     </p>
-                    <div className="mt-2">
+                    <div className="mt-2.5">
                       <button
                         type="button"
                         onClick={performHealthCheck}
                         disabled={isCheckingHealth}
-                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-100/50 touch-press"
+                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-950 hover:bg-amber-100/60 focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                       >
                         <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -235,13 +228,13 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
               <div
                 role="status"
                 aria-live="polite"
-                className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 text-xs text-blue-900"
+                className="rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-4 text-xs text-[#393834]"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent shrink-0" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#55534F] border-t-transparent shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-blue-950">Removing Background with AI...</p>
-                    <p className="mt-0.5 text-blue-800 text-[11px]">
+                    <p className="font-semibold text-[#393834]">Removing Background with AI...</p>
+                    <p className="mt-0.5 text-[#777570] text-[11px]">
                       Isolating portrait subject on your device. This takes 1–3 seconds.
                     </p>
                   </div>
@@ -251,7 +244,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   <button
                     type="button"
                     onClick={handleCancelRemoval}
-                    className="inline-flex min-h-[36px] items-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 touch-press"
+                    className="inline-flex min-h-[36px] items-center rounded-lg border border-[#E3E1DC] bg-white px-3 py-1 text-xs font-medium text-[#393834] hover:bg-[#FAF9F6] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                   >
                     Cancel
                   </button>
@@ -263,7 +256,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
             {errorMessage && (
               <div
                 role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-900"
+                className="rounded-lg border border-red-200 bg-red-50/80 p-3.5 text-xs text-red-950"
               >
                 <div className="flex items-start gap-2">
                   <svg className="h-4 w-4 shrink-0 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -279,15 +272,15 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
 
             {/* Cutout Success Confirmation */}
             {isCutoutActive && !isProcessing && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 text-xs text-emerald-950">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-3.5 text-xs text-emerald-950">
                 <div className="flex items-start gap-2">
                   <svg className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <div>
-                    <p className="font-bold text-emerald-950">Subject Isolated Successfully</p>
+                    <p className="font-semibold text-emerald-950">Subject Isolated Successfully</p>
                     <p className="mt-0.5 text-emerald-800 text-[11px] leading-relaxed">
-                      Your portrait background is cleanly removed. Continue to Step 4 to pick a solid background color (White, Off-white, Light Blue, or custom).
+                      Your portrait background is cleanly removed. Continue to choose a solid background color (White, Off-white, Light Blue, or custom).
                     </p>
                   </div>
                 </div>
@@ -296,14 +289,14 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
           </div>
 
           {/* Action Navigation Footer */}
-          <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+          <div className="flex flex-col gap-2.5 pt-3 border-t border-[#E3E1DC]">
             {isCutoutActive ? (
               // Actions when cutout exists
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 <button
                   type="button"
                   onClick={onProceedToColor}
-                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 touch-press"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#55534F] hover:bg-[#45433F] active:bg-[#383633] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:ring-offset-2 focus-visible:outline-none touch-press"
                 >
                   <span>Continue to Color</span>
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,7 +308,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   <button
                     type="button"
                     onClick={onRevertToOriginal}
-                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 touch-press"
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3 py-2 text-xs font-medium text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                   >
                     Revert to Original
                   </button>
@@ -323,7 +316,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   <button
                     type="button"
                     onClick={onBackToCrop}
-                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 touch-press"
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                   >
                     Adjust Crop
                   </button>
@@ -331,12 +324,12 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
               </div>
             ) : (
               // Actions when cutout has not been generated
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 <button
                   type="button"
                   onClick={handleStartRemoval}
                   disabled={isProcessing}
-                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 touch-press disabled:opacity-50"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#55534F] hover:bg-[#45433F] active:bg-[#383633] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:ring-offset-2 focus-visible:outline-none touch-press disabled:opacity-50"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -353,17 +346,17 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   type="button"
                   onClick={onSkipBackground}
                   disabled={isProcessing}
-                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 hover:bg-slate-50 touch-press"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-4 py-2.5 text-xs sm:text-sm font-medium text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                 >
                   <span>Keep Original Background</span>
                 </button>
 
-                <div className="grid grid-cols-2 gap-2 mt-1">
+                <div className="grid grid-cols-2 gap-2 mt-0.5">
                   <button
                     type="button"
                     onClick={onBackToCrop}
                     disabled={isProcessing}
-                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 touch-press"
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                   >
                     Adjust Crop
                   </button>
@@ -372,7 +365,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                     type="button"
                     onClick={onReplacePhoto}
                     disabled={isProcessing}
-                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 touch-press"
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                   >
                     Change Photo
                   </button>
