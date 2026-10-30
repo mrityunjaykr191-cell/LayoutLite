@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  checkServiceHealth,
-  removeBackground,
   BackgroundRemovalError,
-  ServiceHealthResult,
-} from '../services/backgroundRemovalClient';
+  providerRegistry,
+  type BackgroundRemovalHealth,
+  type BackgroundRemovalMode,
+} from '../services/backgroundRemovalClient.ts';
 
 interface BackgroundStepProps {
   readonly croppedPhotoUrl: string;
@@ -17,6 +17,8 @@ interface BackgroundStepProps {
   readonly onBackToCrop: () => void;
   readonly onProceedToColor: () => void;
   readonly onReplacePhoto: () => void;
+  readonly activeMode?: BackgroundRemovalMode;
+  readonly onModeChange?: (mode: BackgroundRemovalMode) => void;
 }
 
 export const BackgroundStep: React.FC<BackgroundStepProps> = ({
@@ -30,8 +32,20 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
   onBackToCrop,
   onProceedToColor,
   onReplacePhoto,
+  activeMode,
+  onModeChange,
 }) => {
-  const [health, setHealth] = useState<ServiceHealthResult | null>(null);
+  // Mode state: Local AI by default on first visit
+  const [mode, setMode] = useState<BackgroundRemovalMode>(() =>
+    activeMode ?? providerRegistry.getActiveMode()
+  );
+  const [hasConsent, setHasConsent] = useState<boolean>(() =>
+    providerRegistry.hasRemoteConsent()
+  );
+  const [isConsentModalOpen, setIsConsentModalOpen] = useState<boolean>(false);
+
+  // Health and processing states
+  const [health, setHealth] = useState<BackgroundRemovalHealth | null>(null);
   const [isCheckingHealth, setIsCheckingHealth] = useState<boolean>(true);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -39,28 +53,80 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
   // Active abort controller for current removal request
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const performHealthCheck = async () => {
+  // Synchronize internal mode with activeMode prop if supplied
+  useEffect(() => {
+    if (activeMode && activeMode !== mode) {
+      setMode(activeMode);
+    }
+  }, [activeMode]);
+
+  // Subscribe to providerRegistry changes (mode, consent)
+  useEffect(() => {
+    return providerRegistry.subscribe(({ mode: updatedMode, consent }) => {
+      setMode(updatedMode);
+      setHasConsent(consent);
+    });
+  }, []);
+
+  const performHealthCheck = async (targetMode?: BackgroundRemovalMode) => {
+    const currentMode = targetMode ?? mode;
     setIsCheckingHealth(true);
     try {
-      const result = await checkServiceHealth();
+      const provider = providerRegistry.getProvider(currentMode);
+      const result = await provider.checkHealth();
       setHealth(result);
-    } catch {
-      setHealth({ ok: false, ready: false, error: 'Cannot connect to local service' });
+    } catch (err: unknown) {
+      setHealth({
+        ok: false,
+        ready: false,
+        mode: currentMode,
+        endpointUrl: '',
+        error: err instanceof Error ? err.message : 'Service unreachable',
+      });
     } finally {
       setIsCheckingHealth(false);
     }
   };
 
   useEffect(() => {
-    performHealthCheck();
+    performHealthCheck(mode);
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, []);
+  }, [mode]);
 
-  const handleStartRemoval = async () => {
+  const handleModeSelect = (newMode: BackgroundRemovalMode) => {
+    if (newMode === mode) return;
+    setMode(newMode);
+    providerRegistry.setActiveMode(newMode);
+    onModeChange?.(newMode);
+    setErrorMessage(null);
+  };
+
+  const handleStartRemovalClick = () => {
+    // If Cloud AI is selected and consent has not been granted yet, show consent modal first
+    if (mode === 'remote' && !providerRegistry.hasRemoteConsent()) {
+      setIsConsentModalOpen(true);
+      return;
+    }
+    executeRemoval();
+  };
+
+  const handleConfirmConsent = () => {
+    providerRegistry.setRemoteConsent(true);
+    setHasConsent(true);
+    setIsConsentModalOpen(false);
+    executeRemoval();
+  };
+
+  const handleRevokeConsent = () => {
+    providerRegistry.setRemoteConsent(false);
+    setHasConsent(false);
+  };
+
+  const executeRemoval = async () => {
     setIsProcessing(true);
     setErrorMessage(null);
 
@@ -68,9 +134,10 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
     abortControllerRef.current = controller;
 
     try {
-      const pngBlob = await removeBackground(croppedBlob, {
+      const provider = providerRegistry.getActiveProvider();
+      const pngBlob = await provider.removeBackground(croppedBlob, {
         externalSignal: controller.signal,
-        timeoutMs: 35000,
+        timeoutMs: mode === 'remote' ? 45000 : 35000,
       });
 
       const newCutoutUrl = URL.createObjectURL(pngBlob);
@@ -100,11 +167,12 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
   };
 
   const isCutoutActive = Boolean(cutoutUrl);
+  const isRemote = mode === 'remote';
 
   return (
     <div className="w-full rounded-xl border border-[#E3E1DC] bg-white p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       {/* Step Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#E3E1DC] pb-3 sm:pb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[#E3E1DC] pb-3 sm:pb-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#393834]">
@@ -127,31 +195,100 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
           </p>
         </div>
 
-        {/* Local Service Status Pill */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          {isCheckingHealth ? (
-            <span className="inline-flex items-center gap-1.5 text-xs text-[#777570]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#777570] animate-pulse" />
-              Checking service...
-            </span>
-          ) : health?.ok ? (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#E3E1DC] bg-[#FAF9F6] px-2.5 py-1 text-xs font-medium text-[#55534F]"
-              title="Local background removal service running at http://127.0.0.1:8000"
+        {/* Mode Selector & Service Status */}
+        <div className="flex flex-col sm:items-end gap-2 self-start sm:self-auto">
+          {/* Segmented Mode Selector */}
+          <div
+            role="radiogroup"
+            aria-label="Background removal processing mode"
+            className="inline-flex items-center rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-0.5 shadow-2xs"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === 'local'}
+              onClick={() => handleModeSelect('local')}
+              className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
+                mode === 'local'
+                  ? 'bg-white text-[#393834] font-semibold shadow-2xs border border-[#E3E1DC]'
+                  : 'text-[#777570] hover:text-[#393834]'
+              }`}
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
-              <span>AI Ready (Local)</span>
-            </span>
-          ) : (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50/80 px-2.5 py-1 text-xs font-medium text-amber-900"
-              title="Local service unreachable at http://127.0.0.1:8000"
+              <span>Local AI</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === 'remote'}
+              onClick={() => handleModeSelect('remote')}
+              className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
+                mode === 'remote'
+                  ? 'bg-white text-[#393834] font-semibold shadow-2xs border border-[#E3E1DC]'
+                  : 'text-[#777570] hover:text-[#393834]'
+              }`}
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-600" aria-hidden="true" />
-              <span>AI Service Offline</span>
-            </span>
-          )}
+              <span>Cloud AI</span>
+            </button>
+          </div>
+
+          {/* Service Status Indicator for Active Mode */}
+          <div className="flex items-center gap-2">
+            {isCheckingHealth ? (
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#777570]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#777570] animate-pulse" />
+                Checking {isRemote ? 'cloud' : 'local'} service...
+              </span>
+            ) : health?.ok ? (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md border border-[#E3E1DC] bg-[#FAF9F6] px-2.5 py-1 text-xs font-medium text-[#55534F]"
+                title={
+                  isRemote
+                    ? `Cloud service ready at ${health.endpointUrl}`
+                    : `Local service running at ${health.endpointUrl}`
+                }
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
+                <span>{isRemote ? 'Cloud AI Ready' : 'AI Ready (Local)'}</span>
+              </span>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50/80 px-2.5 py-1 text-xs font-medium text-amber-900"
+                title={health?.error ?? 'Service offline'}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-600" aria-hidden="true" />
+                <span>{isRemote ? 'Cloud Service Offline' : 'AI Service Offline'}</span>
+              </span>
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* Mode Explanation & Consent Status Banner */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] px-3.5 py-2 text-xs text-[#777570]">
+        <div className="flex items-center gap-2">
+          <svg className="h-3.5 w-3.5 shrink-0 text-[#777570]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>
+            {mode === 'local'
+              ? 'Local processing on your computer (127.0.0.1:8000). No photos leave your machine.'
+              : 'Cloud processing via secure HTTPS. Photos are sent for temporary processing.'}
+          </span>
+        </div>
+
+        {isRemote && hasConsent && (
+          <div className="flex items-center gap-1.5 text-[11px]">
+            <span className="text-emerald-700 font-medium">Consent Active</span>
+            <span className="text-[#E3E1DC]">&middot;</span>
+            <button
+              type="button"
+              onClick={handleRevokeConsent}
+              className="text-[#55534F] hover:text-[#393834] underline focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none rounded"
+            >
+              Revoke Consent
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Content Layout */}
@@ -193,8 +330,8 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
         {/* Right Controls & Actions Pane (md:col-span-6) */}
         <div className="md:col-span-6 flex flex-col justify-between gap-4">
           <div className="flex flex-col gap-3">
-            {/* Offline Notice (when AI service is not running and cutout not generated) */}
-            {!isCheckingHealth && !health?.ok && !isCutoutActive && (
+            {/* Local Offline Notice (when Local AI is selected and not running) */}
+            {mode === 'local' && !isCheckingHealth && !health?.ok && !isCutoutActive && (
               <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-950">
                 <div className="flex items-start gap-2.5">
                   <svg className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -203,12 +340,13 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   <div className="flex-1">
                     <p className="font-semibold text-amber-950">Local AI Service Not Running</p>
                     <p className="mt-0.5 text-amber-800 leading-relaxed text-[11px]">
-                      The background removal backend is not detected at <code className="font-mono text-amber-900">http://127.0.0.1:8000</code>. You can start it in your terminal or simply click &ldquo;Keep Original Background&rdquo; to proceed.
+                      The local background removal service is not detected at <code className="font-mono text-amber-900">http://127.0.0.1:8000</code>.
+                      Start it in your terminal with <code className="font-mono text-amber-900">python run.py</code>, click Check Again, or choose Keep Original Background.
                     </p>
                     <div className="mt-2.5">
                       <button
                         type="button"
-                        onClick={performHealthCheck}
+                        onClick={() => performHealthCheck('local')}
                         disabled={isCheckingHealth}
                         className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-950 hover:bg-amber-100/60 focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                       >
@@ -216,6 +354,46 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                         <span>Check Again</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Remote Offline or Unconfigured Notice (when Cloud AI is selected and not ready) */}
+            {mode === 'remote' && !isCheckingHealth && !health?.ok && !isCutoutActive && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-950">
+                <div className="flex items-start gap-2.5">
+                  <svg className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="font-semibold text-amber-950">
+                      {!providerRegistry.isRemoteConfigured()
+                        ? 'Cloud AI Endpoint Not Configured'
+                        : 'Cloud AI Service Unavailable'}
+                    </p>
+                    <p className="mt-0.5 text-amber-800 leading-relaxed text-[11px]">
+                      {!providerRegistry.isRemoteConfigured()
+                        ? 'The cloud background removal endpoint (VITE_REMOTE_BG_REMOVER_URL) is not set. You can use Local AI or proceed with your original photo.'
+                        : 'Cannot connect to the cloud background removal service. Check your connection or switch to Local AI.'}
+                    </p>
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => performHealthCheck('remote')}
+                        disabled={isCheckingHealth}
+                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-950 hover:bg-amber-100/60 focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+                      >
+                        <span>Check Again</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleModeSelect('local')}
+                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3 py-1 text-xs font-medium text-[#393834] hover:bg-[#FAF9F6] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+                      >
+                        <span>Switch to Local AI</span>
                       </button>
                     </div>
                   </div>
@@ -233,9 +411,13 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 <div className="flex items-center gap-3">
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#55534F] border-t-transparent shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[#393834]">Removing Background with AI...</p>
+                    <p className="font-semibold text-[#393834]">
+                      Removing Background with {isRemote ? 'Cloud AI' : 'Local AI'}...
+                    </p>
                     <p className="mt-0.5 text-[#777570] text-[11px]">
-                      Isolating portrait subject on your device. This takes 1–3 seconds.
+                      {isRemote
+                        ? 'Transmitting photo and isolating portrait subject. This takes 2–5 seconds.'
+                        : 'Isolating portrait subject on your device. This takes 1–3 seconds.'}
                     </p>
                   </div>
                 </div>
@@ -327,7 +509,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
               <div className="flex flex-col gap-2.5">
                 <button
                   type="button"
-                  onClick={handleStartRemoval}
+                  onClick={handleStartRemovalClick}
                   disabled={isProcessing}
                   className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#55534F] hover:bg-[#45433F] active:bg-[#383633] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:ring-offset-2 focus-visible:outline-none touch-press disabled:opacity-50"
                 >
@@ -375,6 +557,57 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Explicit Remote Consent Modal Dialog */}
+      {isConsentModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="remote-consent-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs"
+        >
+          <div className="w-full max-w-md rounded-xl border border-[#E3E1DC] bg-white p-5 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#FAF9F6] border border-[#E3E1DC] text-[#55534F]">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div>
+                <h3 id="remote-consent-title" className="text-base font-semibold text-[#393834]">
+                  Enable Cloud AI Processing?
+                </h3>
+                <p className="mt-1 text-xs text-[#777570] leading-relaxed">
+                  Your cropped portrait photo will be transmitted over secure HTTPS to a remote processing service.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3.5 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3 text-xs text-[#55534F] space-y-2 leading-relaxed">
+              <p>• <strong>Temporary processing:</strong> The service processes the photo in memory to remove the background and returns a transparent PNG.</p>
+              <p>• <strong>Privacy:</strong> The service architecture is designed not to retain or permanently store photos on disk or in databases.</p>
+              <p>• <strong>Control:</strong> You can revoke this consent at any time from this screen or switch back to Local AI.</p>
+            </div>
+
+            <div className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsConsentModalOpen(false)}
+                className="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-[#E3E1DC] bg-white px-4 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmConsent}
+                className="inline-flex min-h-[40px] items-center justify-center rounded-lg bg-[#55534F] hover:bg-[#45433F] active:bg-[#383633] px-4 py-2 text-xs font-semibold text-white shadow-2xs focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+              >
+                Agree &amp; Remove Background
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

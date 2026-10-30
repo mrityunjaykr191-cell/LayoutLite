@@ -1,6 +1,15 @@
 import React from 'react';
+import type { BackgroundRemovalMode } from '../services/backgroundRemoval/types.ts';
+import { providerRegistry } from '../services/backgroundRemovalClient.ts';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  readonly mode?: BackgroundRemovalMode;
+}
+
+export const Header: React.FC<HeaderProps> = ({ mode }) => {
+  const activeMode = mode ?? providerRegistry.getActiveMode();
+  const isRemote = activeMode === 'remote';
+
   return (
     <header className="border-b border-[#E3E1DC] bg-white no-print">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-3 py-2.5 sm:px-6 sm:py-3.5">
@@ -23,14 +32,18 @@ export const Header: React.FC = () => {
           </p>
         </div>
 
-        {/* Minimal Local Privacy Note */}
+        {/* Minimal Privacy Note */}
         <div
           className="inline-flex shrink-0 items-center gap-1.5 text-xs text-[#777570]"
-          title="Photos are processed entirely on your device with zero cloud storage"
+          title={isRemote ? 'Photo sent securely over HTTPS for temporary processing' : 'Photos are processed entirely on your device with local processing'}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
-          <span className="sm:hidden text-[11px] font-medium text-[#777570]">On-device</span>
-          <span className="hidden sm:inline text-xs text-[#777570]">Local processing • On-device only</span>
+          <span className={`h-1.5 w-1.5 rounded-full ${isRemote ? 'bg-amber-600' : 'bg-emerald-600'}`} aria-hidden="true" />
+          <span className="sm:hidden text-[11px] font-medium text-[#777570]">{isRemote ? 'Cloud AI' : 'On-device'}</span>
+          <span className="hidden sm:inline text-xs text-[#777570]">
+            {isRemote
+              ? 'Cloud processing • Photo sent securely for temporary processing'
+              : 'Local processing • On-device only'}
+          </span>
         </div>
       </div>
     </header>

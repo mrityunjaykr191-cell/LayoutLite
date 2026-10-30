@@ -1,11 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { MAX_FILE_SIZE_BYTES, formatFileSize } from '../utils/fileValidation';
+import type { BackgroundRemovalMode } from '../services/backgroundRemoval/types.ts';
+import { providerRegistry } from '../services/backgroundRemovalClient.ts';
 
 interface UploadDropzoneProps {
   readonly onFileSelected: (file: File) => void;
   readonly isLoading: boolean;
   readonly errorMessage: string | null;
   readonly onClearError: () => void;
+  readonly mode?: BackgroundRemovalMode;
 }
 
 export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
@@ -13,7 +16,10 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
   isLoading,
   errorMessage,
   onClearError,
+  mode,
 }) => {
+  const activeMode = mode ?? providerRegistry.getActiveMode();
+  const isRemote = activeMode === 'remote';
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -185,7 +191,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
               id="upload-guidelines"
               className="mt-4 text-xs text-[#777570]"
             >
-              JPEG, PNG, or WebP &middot; Max {formatFileSize(MAX_FILE_SIZE_BYTES)} &middot; Processed on-device only
+              JPEG, PNG, or WebP &middot; Max {formatFileSize(MAX_FILE_SIZE_BYTES)} &middot; {isRemote ? 'Cloud processing · Photo sent securely for temporary processing' : 'Processed on-device only'}
             </p>
           </div>
         )}

@@ -28,6 +28,10 @@ import { CropSettings, createDefaultCropSettings } from './utils/cropGeometry';
 import { CroppedPhotoResult } from './utils/cropExporter';
 import { createPhotoUrlTracker, PhotoUrlTracker } from './utils/photoUrlTracker';
 import { DEFAULT_BACKGROUND_COLOR } from './utils/colorCompositor';
+import {
+  providerRegistry,
+  type BackgroundRemovalMode,
+} from './services/backgroundRemovalClient.ts';
 
 export interface RawPhotoMetadata {
   readonly name: string;
@@ -65,6 +69,17 @@ export const App: React.FC = () => {
 
   // Provisional physical photo dimensions from shared core
   const [photoDimensions, setPhotoDimensions] = useState<PhotoDimensions>(PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS);
+
+  // Background removal mode state (kept synchronized with providerRegistry)
+  const [bgRemovalMode, setBgRemovalMode] = useState<BackgroundRemovalMode>(() =>
+    providerRegistry.getActiveMode()
+  );
+
+  useEffect(() => {
+    return providerRegistry.subscribe(({ mode }) => {
+      setBgRemovalMode(mode);
+    });
+  }, []);
 
   // Step 6: A4 Sheet Layout settings & calculated result
   const [layoutSettings, setLayoutSettings] = useState<SheetLayoutSettings>(DEFAULT_LAYOUT_SETTINGS);
@@ -246,7 +261,7 @@ export const App: React.FC = () => {
   return (
     <div className="flex min-h-dvh flex-col bg-[#F5F4F1] text-[#393834] antialiased">
       {/* Top Application Header */}
-      <Header />
+      <Header mode={bgRemovalMode} />
 
       {/* Workflow Stepper Navigation */}
       <Stepper currentStep={currentStep} />
@@ -271,6 +286,7 @@ export const App: React.FC = () => {
                 isLoading={isLoading}
                 errorMessage={errorMessage}
                 onClearError={() => setErrorMessage(null)}
+                mode={bgRemovalMode}
               />
 
               <WorkflowExplainer />
@@ -308,6 +324,8 @@ export const App: React.FC = () => {
               }}
               onProceedToColor={() => setActiveWorkflowStep(4)}
               onReplacePhoto={handleResetToUpload}
+              activeMode={bgRemovalMode}
+              onModeChange={(newMode) => providerRegistry.setActiveMode(newMode)}
             />
           )}
 
@@ -396,7 +414,7 @@ export const App: React.FC = () => {
       </main>
 
       {/* Application Footer */}
-      <Footer />
+      <Footer mode={bgRemovalMode} />
     </div>
   );
 };

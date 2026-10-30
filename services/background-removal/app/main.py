@@ -1,35 +1,50 @@
-"""FastAPI application for local background removal microservice."""
+"""FastAPI application for local and remote background removal microservice."""
 
+from contextlib import asynccontextmanager
 import io
 import logging
-from typing import Union
+from typing import AsyncGenerator
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from PIL import Image
 
+from app.config import settings
+from app.rate_limiter import check_rate_limit
 from app.schemas import ErrorResponse, HealthResponse
 from app.segmenter import SegmentationError, get_segmenter
 
 logger = logging.getLogger("passport_photo_studio.background_removal")
 
-MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/jpg"}
 ALLOWED_PIL_FORMATS = {"JPEG", "PNG"}
 
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+    """Lifespan context manager for startup pre-warming and graceful shutdown."""
+    if settings.PREWARM_MODEL:
+        logger.info("Pre-warming rembg model '%s' on startup...", settings.REMBG_MODEL)
+        try:
+            segmenter = get_segmenter()
+            _ = segmenter.session  # Force eager session load
+            logger.info("Model '%s' pre-warmed successfully.", settings.REMBG_MODEL)
+        except Exception as exc:
+            logger.warning("Model pre-warming failed during startup (will retry on first request): %s", exc)
+    yield
+
+
 app = FastAPI(
     title="Passport Photo Studio - Background Removal Service",
-    description="Local privacy-first background removal using rembg (u2netp)",
-    version="0.1.0",
+    description="Privacy-first background removal using rembg (u2netp)",
+    version="0.2.0",
+    lifespan=lifespan,
 )
 
-# Strict CORS for local Vite dev server
+# CORS configuration driven by settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
@@ -42,7 +57,7 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
         content = exc.detail
     else:
         content = {"error": str(exc.detail), "detail": None}
-    return JSONResponse(status_code=exc.status_code, content=content)
+    return JSONResponse(status_code=exc.status_code, content=content, headers=exc.headers)
 
 
 @app.exception_handler(Exception)
@@ -77,13 +92,20 @@ async def health_check() -> HealthResponse:
             "description": "Transparent PNG headshot with background removed",
         },
         400: {"model": ErrorResponse, "description": "Invalid or corrupt image"},
-        413: {"model": ErrorResponse, "description": "Payload exceeds 25 MB limit"},
+        413: {"model": ErrorResponse, "description": "Payload exceeds maximum allowed limit"},
         415: {"model": ErrorResponse, "description": "Unsupported media format"},
+        429: {"model": ErrorResponse, "description": "Rate limit exceeded"},
         500: {"model": ErrorResponse, "description": "Inference processing error"},
     },
 )
-async def remove_background(file: UploadFile = File(...)) -> Response:
+async def remove_background(
+    request: Request,
+    file: UploadFile = File(...),
+) -> Response:
     """Remove background from uploaded portrait photo and return transparent PNG."""
+    # 0. Enforce abuse protection rate limits
+    check_rate_limit(request, limit=settings.RATE_LIMIT_PER_MINUTE)
+
     # 1. Quick MIME check if provided
     if file.content_type and file.content_type.lower() not in ALLOWED_MIME_TYPES:
         raise HTTPException(
@@ -94,7 +116,7 @@ async def remove_background(file: UploadFile = File(...)) -> Response:
             },
         )
 
-    # 2. Stream-read with strict 25 MB ceiling
+    # 2. Stream-read with strict payload ceiling
     chunks: list[bytes] = []
     total_size = 0
     chunk_size = 64 * 1024  # 64 KB
@@ -104,12 +126,13 @@ async def remove_background(file: UploadFile = File(...)) -> Response:
         if not chunk:
             break
         total_size += len(chunk)
-        if total_size > MAX_FILE_SIZE_BYTES:
+        if total_size > settings.MAX_FILE_SIZE_BYTES:
+            max_mb = settings.MAX_FILE_SIZE_BYTES // (1024 * 1024)
             raise HTTPException(
                 status_code=status.HTTP_413_CONTENT_TOO_LARGE,
                 detail={
                     "error": "File too large",
-                    "detail": "The uploaded photo exceeds the maximum allowed size of 25 MB.",
+                    "detail": f"The uploaded photo exceeds the maximum allowed size of {max_mb} MB.",
                 },
             )
         chunks.append(chunk)

@@ -99,13 +99,48 @@ Accepts a single portrait photo as multipart form data and returns a transparent
   - Body: Binary transparent PNG data.
 - **Error Responses**:
   - `400 Bad Request`: Empty or corrupted image bytes.
-  - `413 Content Too Large`: Upload exceeds 25 MB limit.
+  - `413 Content Too Large`: Upload exceeds maximum allowed limit.
   - `415 Unsupported Media Type`: Declared or detected format is not JPEG or PNG.
+  - `429 Too Many Requests`: Abuse protection sliding-window rate limit exceeded.
   - `500 Internal Server Error`: Segmentation model error (safe, non-leaking message).
 
 ---
 
-## 6. Running Tests
+## 6. Environment Configuration
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ENVIRONMENT` | `development` | Deployment environment (`development` or `production`). In production, wildcard CORS `*` is disallowed. |
+| `HOST` | `127.0.0.1` | Loopback address for local runs; container binds to `0.0.0.0`. |
+| `PORT` | `8000` | Port to listen on (automatically injected by Cloud Run). |
+| `ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated list of allowed origins (e.g. Vercel deployment URL). |
+| `MAX_FILE_SIZE_BYTES` | `26214400` (25 MB) | Payload ceiling. |
+| `RATE_LIMIT_ENABLED` | `true` | Abuse protection toggle. |
+| `RATE_LIMIT_PER_MINUTE` | `20` | Max requests per IP per minute for background removal. |
+| `PREWARM_MODEL` | `false` (local) / `true` (container) | Pre-initialize ONNX model session during startup to avoid first-request latency. |
+
+---
+
+## 7. Containerization & Cloud Run
+
+Build the container image using Docker:
+```bash
+docker build -t layoutlite-bg-removal:latest .
+```
+
+Or submit to Google Cloud Build without a local Docker engine:
+```bash
+gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/layoutlite-bg-removal:latest
+```
+
+Run locally:
+```bash
+docker run -p 8000:8000 -e ALLOWED_ORIGINS="http://localhost:5173" layoutlite-bg-removal:latest
+```
+
+---
+
+## 8. Running Tests
 
 Run the test suite using pytest:
 

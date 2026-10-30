@@ -320,3 +320,62 @@ def test_alpha_floor_refinement_safeguards() -> None:
         assert refined_alphas[original_idx] == alphas[original_idx]
 
 
+def test_rate_limiting_enforced(client: TestClient) -> None:
+    """Test that abuse protection rate limiter triggers 429 when threshold exceeded."""
+    from app.rate_limiter import reset_rate_limiter
+    from app.config import settings
+
+    reset_rate_limiter()
+    original_limit = settings.RATE_LIMIT_PER_MINUTE
+    settings.RATE_LIMIT_PER_MINUTE = 3
+    png_bytes = create_test_image(format="PNG", mode="RGB")
+
+    try:
+        # First 3 requests succeed
+        for _ in range(3):
+            resp = client.post(
+                "/api/remove-background",
+                files={"file": ("photo.png", png_bytes, "image/png")},
+                headers={"X-Forwarded-For": "203.0.113.10"},
+            )
+            assert resp.status_code == 200
+
+        # 4th request must be rejected with 429
+        resp = client.post(
+            "/api/remove-background",
+            files={"file": ("photo.png", png_bytes, "image/png")},
+            headers={"X-Forwarded-For": "203.0.113.10"},
+        )
+        assert resp.status_code == 429
+        data = resp.json()
+        assert data["error"] == "Rate limit exceeded"
+        assert "Retry-After" in resp.headers
+
+        # Another IP is unaffected
+        resp_other = client.post(
+            "/api/remove-background",
+            files={"file": ("photo.png", png_bytes, "image/png")},
+            headers={"X-Forwarded-For": "203.0.113.99"},
+        )
+        assert resp_other.status_code == 200
+    finally:
+        settings.RATE_LIMIT_PER_MINUTE = original_limit
+        reset_rate_limiter()
+
+
+def test_config_origin_parsing() -> None:
+    """Test parsing and sanitization of comma-separated CORS origins."""
+    from app.config import parse_origins, Settings
+
+    origins = parse_origins("https://layoutlite.vercel.app, https://preview.vercel.app , https://example.com")
+    assert origins == [
+        "https://layoutlite.vercel.app",
+        "https://preview.vercel.app",
+        "https://example.com",
+    ]
+
+    assert parse_origins("") == []
+    assert parse_origins(" ,  ,, ") == []
+
+
+

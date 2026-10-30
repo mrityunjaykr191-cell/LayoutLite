@@ -1,14 +1,14 @@
 """Local launcher for the background removal microservice."""
 
-import sys
 import uvicorn
+from app.config import settings
 
 if __name__ == "__main__":
-    # Ensure service is only accessible on the local loopback interface
+    # Runs on loopback (127.0.0.1:8000) by default, or respects HOST and PORT env vars
     uvicorn.run(
         "app.main:app",
-        host="127.0.0.1",
-        port=8000,
+        host=settings.HOST,
+        port=settings.PORT,
         reload=False,
         log_level="info",
     )
