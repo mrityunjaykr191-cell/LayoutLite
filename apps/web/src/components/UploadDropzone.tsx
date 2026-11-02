@@ -191,7 +191,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
               id="upload-guidelines"
               className="mt-4 text-xs text-[#777570]"
             >
-              JPEG, PNG, or WebP &middot; Max {formatFileSize(MAX_FILE_SIZE_BYTES)} &middot; {isRemote ? 'Cloud processing · Photo sent securely for temporary processing' : 'Processed on-device only'}
+              JPEG, PNG, or WebP &middot; Max {formatFileSize(MAX_FILE_SIZE_BYTES)} &middot; {isRemote ? 'Cloud service uses remove.bg for background removal' : 'Background removal sends the cropped photo to remove.bg'}
             </p>
           </div>
         )}

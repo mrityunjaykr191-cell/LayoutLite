@@ -1,6 +1,6 @@
 /**
  * Local background removal provider.
- * Strictly communicates with http://127.0.0.1:8000 (or explicit local override) with zero external transmission.
+ * Communicates with the local backend, which forwards removal requests to remove.bg.
  */
 
 import type {
@@ -9,20 +9,28 @@ import type {
   BackgroundRemovalProvider,
   RemoveBackgroundOptions,
 } from './types.ts';
-import { BackgroundRemovalError } from './errors.ts';
+import {
+  BackgroundRemovalError,
+  RemoteConsentRequiredError,
+} from './errors.ts';
 import { createCombinedSignal } from './signalUtils.ts';
 
 export const DEFAULT_LOCAL_ENDPOINT = 'http://127.0.0.1:8000';
-export const DEFAULT_TIMEOUT_MS = 30000;
+export const DEFAULT_TIMEOUT_MS = 75000;
 export const HEALTH_CHECK_TIMEOUT_MS = 3500;
 
 export class LocalBackgroundRemovalProvider implements BackgroundRemovalProvider {
   readonly mode: BackgroundRemovalMode = 'local';
   readonly isRemote: boolean = false;
   readonly endpointUrl: string;
+  private readonly getConsent: () => boolean;
 
-  constructor(endpointUrl: string = DEFAULT_LOCAL_ENDPOINT) {
+  constructor(
+    endpointUrl: string = DEFAULT_LOCAL_ENDPOINT,
+    getConsent: () => boolean = () => false
+  ) {
     this.endpointUrl = endpointUrl;
+    this.getConsent = getConsent;
   }
 
   async checkHealth(options?: {
@@ -57,6 +65,7 @@ export class LocalBackgroundRemovalProvider implements BackgroundRemovalProvider
         endpointUrl: this.endpointUrl,
         model: typeof data.model === 'string' ? data.model : undefined,
         device: typeof data.device === 'string' ? data.device : undefined,
+        error: typeof data.error === 'string' ? data.error : undefined,
       };
     } catch (err: unknown) {
       const error = err as Error | undefined;
@@ -85,6 +94,10 @@ export class LocalBackgroundRemovalProvider implements BackgroundRemovalProvider
     imageBlob: Blob,
     options: RemoveBackgroundOptions = {}
   ): Promise<Blob> {
+    if (!this.getConsent()) {
+      throw new RemoteConsentRequiredError();
+    }
+
     const baseUrl = options.baseUrl ?? this.endpointUrl;
     const timeout = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const { signal, cleanup } = createCombinedSignal(timeout, options.externalSignal);

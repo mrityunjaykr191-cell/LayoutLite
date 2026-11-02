@@ -1,5 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { providerRegistry } from '../src/services/backgroundRemoval/providerRegistry.ts';
+import type { RemoveBackgroundOptions } from '../src/services/backgroundRemoval/types.ts';
 import {
   checkServiceHealth,
   removeBackground,
@@ -8,6 +10,18 @@ import {
 
 function assertIsError(err: unknown): asserts err is BackgroundRemovalError {
   assert.ok(err instanceof BackgroundRemovalError, `Expected BackgroundRemovalError but got: ${String(err)}`);
+}
+
+async function removeWithConsent(
+  imageBlob: Blob,
+  options: RemoveBackgroundOptions = {}
+): Promise<Blob> {
+  providerRegistry.setExternalProcessingConsent(true);
+  try {
+    return await removeBackground(imageBlob, options);
+  } finally {
+    providerRegistry.setExternalProcessingConsent(false);
+  }
 }
 
 describe('Background Removal Client', () => {
@@ -73,7 +87,7 @@ describe('Background Removal Client', () => {
     };
 
     try {
-      const result = await removeBackground(testInputBlob, {
+      const result = await removeWithConsent(testInputBlob, {
         baseUrl: 'http://127.0.0.1:8000',
       });
       assert.equal(receivedUrl, 'http://127.0.0.1:8000/api/remove-background');
@@ -96,7 +110,7 @@ describe('Background Removal Client', () => {
     try {
       let caughtError: BackgroundRemovalError | null = null;
       try {
-        await removeBackground(new Blob(['too big']), { baseUrl: 'http://127.0.0.1:8000' });
+        await removeWithConsent(new Blob(['too big']), { baseUrl: 'http://127.0.0.1:8000' });
       } catch (err: unknown) {
         caughtError = err as BackgroundRemovalError;
       }
@@ -120,7 +134,7 @@ describe('Background Removal Client', () => {
     try {
       let caughtError: BackgroundRemovalError | null = null;
       try {
-        await removeBackground(new Blob(['gif']), { baseUrl: 'http://127.0.0.1:8000' });
+        await removeWithConsent(new Blob(['gif']), { baseUrl: 'http://127.0.0.1:8000' });
       } catch (err: unknown) {
         caughtError = err as BackgroundRemovalError;
       }
@@ -147,7 +161,7 @@ describe('Background Removal Client', () => {
     try {
       let caughtError: BackgroundRemovalError | null = null;
       try {
-        await removeBackground(new Blob(['bad image']), { baseUrl: 'http://127.0.0.1:8000' });
+        await removeWithConsent(new Blob(['bad image']), { baseUrl: 'http://127.0.0.1:8000' });
       } catch (err: unknown) {
         caughtError = err as BackgroundRemovalError;
       }
@@ -174,7 +188,7 @@ describe('Background Removal Client', () => {
     };
 
     try {
-      const promise = removeBackground(new Blob(['photo']), {
+      const promise = removeWithConsent(new Blob(['photo']), {
         baseUrl: 'http://127.0.0.1:8000',
         externalSignal: controller.signal,
       });
@@ -213,7 +227,7 @@ describe('Background Removal Client', () => {
       let caughtError: BackgroundRemovalError | null = null;
       try {
         // Set 50ms timeout for rapid test execution
-        await removeBackground(new Blob(['photo']), {
+        await removeWithConsent(new Blob(['photo']), {
           baseUrl: 'http://127.0.0.1:8000',
           timeoutMs: 50,
         });

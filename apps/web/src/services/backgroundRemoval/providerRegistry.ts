@@ -11,7 +11,9 @@ import { LocalBackgroundRemovalProvider } from './localProvider.ts';
 import { RemoteBackgroundRemovalProvider } from './remoteProvider.ts';
 
 export const STORAGE_KEY_MODE = 'layoutlite_bg_removal_mode';
-export const STORAGE_KEY_REMOTE_CONSENT = 'layoutlite_bg_remote_consent';
+export const STORAGE_KEY_EXTERNAL_PROCESSING_CONSENT =
+  'layoutlite_bg_external_processing_consent';
+export const STORAGE_KEY_REMOTE_CONSENT = STORAGE_KEY_EXTERNAL_PROCESSING_CONSENT;
 
 export type RegistryListener = (state: { mode: BackgroundRemovalMode; consent: boolean }) => void;
 
@@ -33,9 +35,12 @@ class ProviderRegistry {
   private listeners: Set<RegistryListener> = new Set();
 
   constructor() {
-    this.localProvider = new LocalBackgroundRemovalProvider();
+    this.localProvider = new LocalBackgroundRemovalProvider(
+      undefined,
+      () => this.hasExternalProcessingConsent()
+    );
     this.remoteProvider = new RemoteBackgroundRemovalProvider({
-      getConsent: () => this.hasRemoteConsent(),
+      getConsent: () => this.hasExternalProcessingConsent(),
     });
     this.hydrateFromStorage();
   }
@@ -64,7 +69,7 @@ class ProviderRegistry {
     }
 
     try {
-      const storedConsent = storage.getItem(STORAGE_KEY_REMOTE_CONSENT);
+      const storedConsent = storage.getItem(STORAGE_KEY_EXTERNAL_PROCESSING_CONSENT);
       this.inMemoryConsent = storedConsent === 'true';
 
       const storedMode = storage.getItem(STORAGE_KEY_MODE);
@@ -99,16 +104,24 @@ class ProviderRegistry {
   }
 
   hasRemoteConsent(): boolean {
+    return this.hasExternalProcessingConsent();
+  }
+
+  hasExternalProcessingConsent(): boolean {
     return this.inMemoryConsent;
   }
 
   setRemoteConsent(consented: boolean): void {
+    this.setExternalProcessingConsent(consented);
+  }
+
+  setExternalProcessingConsent(consented: boolean): void {
     this.inMemoryConsent = consented;
     const storage = getStorage();
     if (storage) {
       try {
         storage.setItem(
-          STORAGE_KEY_REMOTE_CONSENT,
+          STORAGE_KEY_EXTERNAL_PROCESSING_CONSENT,
           consented ? 'true' : 'false'
         );
       } catch {
@@ -148,7 +161,7 @@ class ProviderRegistry {
     if (storage) {
       try {
         storage.removeItem(STORAGE_KEY_MODE);
-        storage.removeItem(STORAGE_KEY_REMOTE_CONSENT);
+        storage.removeItem(STORAGE_KEY_EXTERNAL_PROCESSING_CONSENT);
       } catch {
         // Safe ignore
       }
@@ -161,12 +174,15 @@ class ProviderRegistry {
    */
   configureEndpoints(config: { localUrl?: string; remoteUrl?: string }): void {
     if (config.localUrl) {
-      this.localProvider = new LocalBackgroundRemovalProvider(config.localUrl);
+      this.localProvider = new LocalBackgroundRemovalProvider(
+        config.localUrl,
+        () => this.hasExternalProcessingConsent()
+      );
     }
     if (config.remoteUrl !== undefined) {
       this.remoteProvider = new RemoteBackgroundRemovalProvider({
         endpointUrl: config.remoteUrl,
-        getConsent: () => this.hasRemoteConsent(),
+        getConsent: () => this.hasExternalProcessingConsent(),
       });
     }
   }

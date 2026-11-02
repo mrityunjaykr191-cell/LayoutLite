@@ -17,7 +17,7 @@ import {
 } from './errors.ts';
 import { createCombinedSignal } from './signalUtils.ts';
 
-export const DEFAULT_REMOTE_TIMEOUT_MS = 45000;
+export const DEFAULT_REMOTE_TIMEOUT_MS = 75000;
 export const REMOTE_HEALTH_CHECK_TIMEOUT_MS = 5000;
 
 export interface RemoteProviderConfig {
@@ -90,6 +90,7 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
         endpointUrl: this.endpointUrl,
         model: typeof data.model === 'string' ? data.model : undefined,
         device: typeof data.device === 'string' ? data.device : undefined,
+        error: typeof data.error === 'string' ? data.error : undefined,
       };
     } catch (err: unknown) {
       const error = err as Error | undefined;
@@ -180,7 +181,7 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
         }
         if (response.status === 500) {
           throw new BackgroundRemovalError(
-            errorDetail || 'Cloud AI failed to isolate the subject. You can keep your original photo.',
+            errorDetail || 'The background removal provider failed to isolate the subject. You can keep your original photo.',
             500
           );
         }

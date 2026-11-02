@@ -8,7 +8,10 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
+from app import main as main_module
+from app.config import settings
 from app.main import app
+from app.remove_bg_client import RemoveBgAPIError
 from app.segmenter import BackgroundSegmenter, SegmentationError, set_segmenter
 
 
@@ -49,10 +52,16 @@ class MockFailingSegmenter(BackgroundSegmenter):
 
 
 @pytest.fixture(autouse=True)
-def setup_mock_segmenter() -> Generator[None, None, None]:
-    """Ensure tests run with isolated mock segmenter by default."""
+def setup_mock_provider(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
+    """Keep route tests isolated from the external provider."""
     mock = MockSuccessfulSegmenter()
     set_segmenter(mock)
+    monkeypatch.setattr(settings, "REMOVE_BG_API_KEY", "test-api-key")
+
+    async def mock_remove_background(image_bytes: bytes, mime_type: str) -> bytes:
+        return create_transparent_png()
+
+    monkeypatch.setattr(main_module, "remove_bg_api", mock_remove_background)
     yield
     set_segmenter(None)
 
@@ -69,9 +78,23 @@ def test_health_check(client: TestClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert data["model"] == "u2netp"
+    assert data["model"] == "remove.bg"
     assert data["ready"] is True
-    assert data["device"] == "cpu"
+    assert data["device"] == "remote API"
+    assert "test-api-key" not in response.text
+
+
+def test_health_check_without_api_key(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test health reports missing provider configuration without claiming readiness."""
+    monkeypatch.setattr(settings, "REMOVE_BG_API_KEY", "")
+
+    response = client.get("/api/health")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["ready"] is False
+    assert data["error"] == "Set REMOVE_BG_API_KEY on the background-removal service."
 
 
 def test_remove_background_png_success(client: TestClient) -> None:
@@ -167,21 +190,118 @@ def test_payload_too_large(client: TestClient) -> None:
     assert data["error"] == "File too large"
 
 
-def test_inference_failure_returns_clean_500(client: TestClient) -> None:
-    """Test inference failure returns safe 500 error without exposing stack trace."""
-    set_segmenter(MockFailingSegmenter())
+def test_provider_failure_returns_clean_502(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test provider failure returns safe 502 error without exposing stack trace."""
+    async def fail_remove_background(image_bytes: bytes, mime_type: str) -> bytes:
+        raise RemoveBgAPIError("Upstream failed")
+
+    monkeypatch.setattr(main_module, "remove_bg_api", fail_remove_background)
     png_bytes = create_test_image(format="PNG", mode="RGB")
     response = client.post(
         "/api/remove-background",
         files={"file": ("photo.png", png_bytes, "image/png")},
     )
 
-    assert response.status_code == 500
+    assert response.status_code == 502
     data = response.json()
     assert data["error"] == "Background removal failed"
     # Ensure no traceback info is returned in payload
     assert "Traceback" not in response.text
     assert "File \"" not in response.text
+
+
+def test_remove_background_forwards_validated_image(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test valid image bytes and detected MIME type are passed to the provider."""
+    forwarded: list[tuple[bytes, str]] = []
+
+    async def capture_remove_background(image_bytes: bytes, mime_type: str) -> bytes:
+        forwarded.append((image_bytes, mime_type))
+        return create_transparent_png()
+
+    monkeypatch.setattr(main_module, "remove_bg_api", capture_remove_background)
+    png_bytes = create_test_image(format="PNG", mode="RGB")
+    response = client.post(
+        "/api/remove-background",
+        files={"file": ("photo.png", png_bytes, "image/png")},
+    )
+
+    assert response.status_code == 200
+    assert forwarded == [(png_bytes, "image/png")]
+
+
+def test_missing_api_key_returns_actionable_503(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test missing API credentials fail explicitly without making a network request."""
+    from app.remove_bg_client import remove_background
+
+    monkeypatch.setattr(settings, "REMOVE_BG_API_KEY", "")
+    monkeypatch.setattr(main_module, "remove_bg_api", remove_background)
+    png_bytes = create_test_image(format="PNG", mode="RGB")
+    response = client.post(
+        "/api/remove-background",
+        files={"file": ("photo.png", png_bytes, "image/png")},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["error"] == "Background removal is not configured"
+
+
+def test_remove_bg_client_uses_provider_request_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test upstream URL, multipart fields, size, and server-side API key header."""
+    import asyncio
+
+    from app import remove_bg_client
+
+    captured: dict[str, object] = {}
+    png_bytes = create_transparent_png()
+
+    class MockAsyncClient:
+        def __init__(self, timeout: float) -> None:
+            captured["timeout"] = timeout
+
+        async def __aenter__(self) -> "MockAsyncClient":
+            return self
+
+        async def __aexit__(
+            self,
+            exc_type: object,
+            exc: object,
+            traceback: object,
+        ) -> None:
+            return None
+
+        async def post(self, url: str, **kwargs: object) -> object:
+            captured["url"] = url
+            captured.update(kwargs)
+
+            class MockResponse:
+                status_code = 200
+                is_success = True
+                content = png_bytes
+
+            return MockResponse()
+
+    monkeypatch.setattr(settings, "REMOVE_BG_API_KEY", "test-api-key")
+    monkeypatch.setattr(remove_bg_client.httpx, "AsyncClient", MockAsyncClient)
+
+    result = asyncio.run(
+        remove_bg_client.remove_background(b"input-image", "image/jpeg")
+    )
+
+    assert result == png_bytes
+    assert captured["url"] == "https://api.remove.bg/v1.0/removebg"
+    assert captured["data"] == {"size": "auto"}
+    assert captured["headers"] == {"X-Api-Key": "test-api-key"}
+    assert captured["files"] == {
+        "image_file": ("photo.jpg", b"input-image", "image/jpeg")
+    }
 
 
 def test_zero_disk_leak(client: TestClient) -> None:
@@ -376,6 +496,3 @@ def test_config_origin_parsing() -> None:
 
     assert parse_origins("") == []
     assert parse_origins(" ,  ,, ") == []
-
-
-

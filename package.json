@@ -9,7 +9,9 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=@passport-photo/web",
+    "dev:desktop": "npm run dev:desktop --workspace=@passport-photo/web",
     "build": "npm run build --workspaces --if-present",
+    "build:desktop": "npm run build:desktop --workspace=@passport-photo/web",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },

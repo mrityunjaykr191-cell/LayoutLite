@@ -106,7 +106,10 @@ describe('Dual Background Removal Architecture', () => {
     it('performs in-memory transparent cutout removal', async () => {
       setupTestEnvironment();
       const originalFetch = globalThis.fetch;
-      const provider = new LocalBackgroundRemovalProvider();
+      const provider = new LocalBackgroundRemovalProvider(
+        DEFAULT_LOCAL_ENDPOINT,
+        () => true
+      );
       const testBlob = new Blob(['photo'], { type: 'image/jpeg' });
       const expectedOutput = new Blob(['cutout'], { type: 'image/png' });
 
@@ -124,10 +127,38 @@ describe('Dual Background Removal Architecture', () => {
       }
     });
 
-    it('handles local rate limiting (HTTP 429)', async () => {
+    it('requires explicit consent before sending a photo through the local service', async () => {
       setupTestEnvironment();
       const originalFetch = globalThis.fetch;
       const provider = new LocalBackgroundRemovalProvider();
+      let fetchInvoked = false;
+      globalThis.fetch = async () => {
+        fetchInvoked = true;
+        return new Response(new Blob(['cutout']), { status: 200 });
+      };
+
+      try {
+        let caughtError: unknown = null;
+        try {
+          await provider.removeBackground(new Blob(['photo']));
+        } catch (err: unknown) {
+          caughtError = err;
+        }
+
+        assert.ok(caughtError instanceof RemoteConsentRequiredError);
+        assert.equal(fetchInvoked, false);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it('handles local rate limiting (HTTP 429)', async () => {
+      setupTestEnvironment();
+      const originalFetch = globalThis.fetch;
+      const provider = new LocalBackgroundRemovalProvider(
+        DEFAULT_LOCAL_ENDPOINT,
+        () => true
+      );
 
       globalThis.fetch = async () => {
         return new Response(

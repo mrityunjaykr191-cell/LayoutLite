@@ -17,7 +17,7 @@ export class BackgroundRemovalError extends Error {
 export class RemoteConsentRequiredError extends BackgroundRemovalError {
   constructor() {
     super(
-      'Cloud AI background removal requires explicit user consent before transmitting photos.',
+      'Background removal requires explicit consent before transmitting photos to the external provider.',
       403,
       false
     );

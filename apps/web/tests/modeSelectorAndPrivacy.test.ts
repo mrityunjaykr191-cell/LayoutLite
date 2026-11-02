@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   providerRegistry,
+  STORAGE_KEY_EXTERNAL_PROCESSING_CONSENT,
   STORAGE_KEY_MODE,
   STORAGE_KEY_REMOTE_CONSENT,
 } from '../src/services/backgroundRemoval/providerRegistry.ts';
@@ -95,7 +96,7 @@ describe('Phase 3: Background Removal Mode Selector & Privacy Indicators', () =>
     });
   });
 
-  describe('2. Remote Consent & Zero Silent Transmission', () => {
+  describe('2. External Processing Consent & Zero Silent Transmission', () => {
     it('never sends a remote request without explicit consent', async () => {
       setupTestEnvironment();
       providerRegistry.configureEndpoints({ remoteUrl: 'https://cloud.api.com' });
@@ -132,6 +133,7 @@ describe('Phase 3: Background Removal Mode Selector & Privacy Indicators', () =>
       providerRegistry.setRemoteConsent(true);
       assert.equal(providerRegistry.hasRemoteConsent(), true);
       assert.equal(storage.getItem(STORAGE_KEY_REMOTE_CONSENT), 'true');
+      assert.equal(storage.getItem(STORAGE_KEY_EXTERNAL_PROCESSING_CONSENT), 'true');
     });
 
     it('allows revoking remote consent immediately', async () => {
@@ -209,100 +211,77 @@ describe('Phase 3: Background Removal Mode Selector & Privacy Indicators', () =>
   });
 
   describe('4. BackgroundStep Component UI Contracts', () => {
-    it('defines accessible segmented mode selector for Local AI and Cloud AI', () => {
+    it('defines accessible segmented mode selector for local and cloud services', () => {
       assert.ok(bgStepContent.includes('role="radiogroup"'), 'Must define radiogroup for mode selector');
       assert.ok(bgStepContent.includes('role="radio"'), 'Must define radio buttons');
-      assert.ok(bgStepContent.includes('Local AI'), 'Must include Local AI option');
-      assert.ok(bgStepContent.includes('Cloud AI'), 'Must include Cloud AI option');
+      assert.ok(bgStepContent.includes('Local Service'), 'Must include Local Service option');
+      assert.ok(bgStepContent.includes('Cloud Service'), 'Must include Cloud Service option');
       assert.ok(bgStepContent.includes('aria-checked={mode === \'local\'}'), 'Must track active local radio');
       assert.ok(bgStepContent.includes('aria-checked={mode === \'remote\'}'), 'Must track active remote radio');
     });
 
-    it('displays concise explanation of processing location', () => {
+    it('discloses that local and cloud processing send photos to remove.bg', () => {
       assert.ok(
-        bgStepContent.includes('Local processing on your computer (127.0.0.1:8000). No photos leave your machine.'),
-        'Must explain local on-device processing'
+        bgStepContent.includes('The local service sends your cropped photo to remove.bg over HTTPS for processing.'),
+        'Must disclose external processing from the local service'
       );
       assert.ok(
-        bgStepContent.includes('Cloud processing via secure HTTPS. Photos are sent for temporary processing.'),
-        'Must explain cloud transmission'
+        bgStepContent.includes('The cloud service sends your cropped photo to remove.bg over HTTPS for processing.'),
+        'Must disclose external processing from the cloud service'
       );
     });
 
-    it('includes explicit remote consent modal dialog before transmission', () => {
+    it('requires explicit consent before sending a photo to remove.bg', () => {
       assert.ok(bgStepContent.includes('role="dialog"'), 'Must define dialog role for consent modal');
       assert.ok(bgStepContent.includes('aria-modal="true"'), 'Must be modal');
-      assert.ok(bgStepContent.includes('Enable Cloud AI Processing?'), 'Must have clear consent heading');
       assert.ok(
-        bgStepContent.includes('Your cropped portrait photo will be transmitted over secure HTTPS'),
-        'Must disclose HTTPS network transmission'
+        bgStepContent.includes('Allow remove.bg Processing?'),
+        'Must have clear consent heading'
+      );
+      assert.ok(
+        bgStepContent.includes('if (!providerRegistry.hasExternalProcessingConsent())'),
+        'Must gate processing on consent in both service modes'
       );
       assert.ok(
         bgStepContent.includes('Agree &amp; Remove Background') || bgStepContent.includes('Agree & Remove Background'),
         'Must require affirmative confirmation button'
       );
       assert.ok(bgStepContent.includes('Cancel'), 'Must provide cancellation option');
+      assert.ok(bgStepContent.includes('remove.bg processes the photo'), 'Must identify the external provider');
     });
 
-    it('provides a visible way to revoke cloud consent', () => {
+    it('provides a visible way to revoke external processing consent', () => {
       assert.ok(bgStepContent.includes('Revoke Consent'), 'Must include Revoke Consent button');
       assert.ok(bgStepContent.includes('handleRevokeConsent'), 'Must wire revocation handler');
     });
 
     it('explains local service startup when unavailable without auto-switching', () => {
-      assert.ok(bgStepContent.includes('Local AI Service Not Running'), 'Must alert when local service offline');
+      assert.ok(bgStepContent.includes('Local Service Not Running'), 'Must alert when local service offline');
       assert.ok(bgStepContent.includes('python run.py'), 'Must instruct user how to start service');
       assert.ok(bgStepContent.includes('Check Again'), 'Must offer check again action');
     });
   });
 
   describe('5. Global Dynamic Privacy Indicators', () => {
-    it('Header renders distinct privacy copy based on active mode', () => {
-      // Local mode
+    it('Header discloses remove.bg processing for all modes', () => {
       assert.ok(
-        headerContent.includes('Local processing • On-device only') ||
-        headerContent.includes('Local processing · On-device only'),
-        'Header must contain local privacy copy'
+        headerContent.includes('Background removal sends photo to remove.bg'),
+        'Header must disclose the external provider'
       );
-      assert.ok(headerContent.includes('On-device'), 'Header must contain short on-device mobile copy');
-
-      // Remote mode
-      assert.ok(
-        headerContent.includes('Cloud processing • Photo sent securely for temporary processing') ||
-        headerContent.includes('Cloud processing · Photo sent securely for temporary processing'),
-        'Header must contain remote privacy copy'
-      );
-      assert.ok(headerContent.includes('Cloud AI'), 'Header must contain short Cloud AI mobile copy');
+      assert.ok(headerContent.includes('remove.bg'), 'Header must identify the external provider on mobile');
     });
 
-    it('Footer renders distinct privacy copy based on active mode', () => {
-      // Local mode
+    it('Footer discloses remove.bg processing for all modes', () => {
       assert.ok(
-        footerContent.includes('Local processing • On-device only') ||
-        footerContent.includes('Local processing only'),
-        'Footer must contain local privacy copy'
-      );
-
-      // Remote mode
-      assert.ok(
-        footerContent.includes('Cloud processing • Photo sent securely for temporary processing') ||
-        footerContent.includes('Cloud processing · Photo sent securely for temporary processing'),
-        'Footer must contain remote privacy copy'
+        footerContent.includes('Background removal sends the cropped photo to remove.bg over HTTPS'),
+        'Footer must disclose the external provider'
       );
     });
 
-    it('UploadDropzone renders distinct supporting privacy text based on active mode', () => {
-      // Local mode
+    it('UploadDropzone discloses remove.bg processing', () => {
       assert.ok(
-        dropzoneContent.includes('Processed on-device only'),
-        'UploadDropzone must mention on-device processing in local mode'
-      );
-
-      // Remote mode
-      assert.ok(
-        dropzoneContent.includes('Cloud processing · Photo sent securely for temporary processing') ||
-        dropzoneContent.includes('Cloud processing'),
-        'UploadDropzone must reflect cloud processing in remote mode'
+        dropzoneContent.includes('Background removal sends the cropped photo to remove.bg'),
+        'UploadDropzone must disclose the external provider'
       );
     });
   });

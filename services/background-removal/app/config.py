@@ -45,11 +45,7 @@ class Settings:
             os.getenv("RATE_LIMIT_PER_MINUTE", "20")
         )
 
-        # Model specification
-        self.REMBG_MODEL: str = os.getenv("REMBG_MODEL", "u2netp")
-        self.PREWARM_MODEL: bool = (
-            os.getenv("PREWARM_MODEL", "false").lower() in ("1", "true", "yes")
-        )
+        self.REMOVE_BG_API_KEY: str = os.getenv("REMOVE_BG_API_KEY", "G3j6K2JzVVSwaLV9f4YvZea6").strip()
 
 
 settings = Settings()

@@ -3,10 +3,8 @@ FROM python:3.11-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    REMBG_HOME=/opt/rembg \
     PORT=8000 \
-    ENVIRONMENT=production \
-    PREWARM_MODEL=true
+    ENVIRONMENT=production
 
 WORKDIR /app
 
@@ -19,18 +17,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-cache u2netp ONNX weights (~4.36 MB) during image build
-# This avoids any cold-start runtime download from GitHub
-RUN mkdir -p /opt/rembg && \
-    python -c "import rembg; rembg.new_session('u2netp')" && \
-    test -f /opt/rembg/models/u2netp/u2netp.onnx
-
 # Copy application code
 COPY app/ ./app/
 
 # Create a non-privileged user and transfer ownership
 RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app /opt/rembg
+    chown -R appuser:appuser /app
 
 USER appuser
 

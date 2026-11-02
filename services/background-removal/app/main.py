@@ -1,9 +1,7 @@
 """FastAPI application for local and remote background removal microservice."""
 
-from contextlib import asynccontextmanager
 import io
 import logging
-from typing import AsyncGenerator
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -12,7 +10,11 @@ from PIL import Image
 from app.config import settings
 from app.rate_limiter import check_rate_limit
 from app.schemas import ErrorResponse, HealthResponse
-from app.segmenter import SegmentationError, get_segmenter
+from app.remove_bg_client import (
+    RemoveBgAPIError,
+    RemoveBgNotConfiguredError,
+    remove_background as remove_bg_api,
+)
 
 logger = logging.getLogger("passport_photo_studio.background_removal")
 
@@ -20,25 +22,10 @@ ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/jpg"}
 ALLOWED_PIL_FORMATS = {"JPEG", "PNG"}
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
-    """Lifespan context manager for startup pre-warming and graceful shutdown."""
-    if settings.PREWARM_MODEL:
-        logger.info("Pre-warming rembg model '%s' on startup...", settings.REMBG_MODEL)
-        try:
-            segmenter = get_segmenter()
-            _ = segmenter.session  # Force eager session load
-            logger.info("Model '%s' pre-warmed successfully.", settings.REMBG_MODEL)
-        except Exception as exc:
-            logger.warning("Model pre-warming failed during startup (will retry on first request): %s", exc)
-    yield
-
-
 app = FastAPI(
     title="Passport Photo Studio - Background Removal Service",
-    description="Privacy-first background removal using rembg (u2netp)",
+    description="Background removal using the remove.bg API",
     version="0.2.0",
-    lifespan=lifespan,
 )
 
 # CORS configuration driven by settings
@@ -74,13 +61,14 @@ async def unhandled_exception_handler(_: Request, exc: Exception) -> JSONRespons
 
 @app.get("/api/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    """Return microservice health and model readiness status."""
-    segmenter = get_segmenter()
+    """Return microservice health and API-key configuration status."""
+    configured = bool(settings.REMOVE_BG_API_KEY)
     return HealthResponse(
         status="ok",
-        model=segmenter.model_name,
-        ready=segmenter.is_ready(),
-        device="cpu",
+        model="remove.bg",
+        ready=configured,
+        device="remote API",
+        error=None if configured else "Set REMOVE_BG_API_KEY on the background-removal service.",
     )
 
 
@@ -95,7 +83,9 @@ async def health_check() -> HealthResponse:
         413: {"model": ErrorResponse, "description": "Payload exceeds maximum allowed limit"},
         415: {"model": ErrorResponse, "description": "Unsupported media format"},
         429: {"model": ErrorResponse, "description": "Rate limit exceeded"},
-        500: {"model": ErrorResponse, "description": "Inference processing error"},
+        502: {"model": ErrorResponse, "description": "remove.bg API processing error"},
+        503: {"model": ErrorResponse, "description": "remove.bg API key is not configured"},
+        504: {"model": ErrorResponse, "description": "remove.bg API request timed out"},
     },
 )
 async def remove_background(
@@ -173,17 +163,25 @@ async def remove_background(
             },
         )
 
-    # 4. In-memory segmentation
-    segmenter = get_segmenter()
+    # 4. Forward the validated image to remove.bg without writing it to disk
+    mime_type = "image/jpeg" if format_name == "JPEG" else "image/png"
     try:
-        output_png_bytes = segmenter.remove_background(image_bytes)
-    except SegmentationError as exc:
-        logger.error("Segmentation failed: %s", exc)
+        output_png_bytes = await remove_bg_api(image_bytes, mime_type)
+    except RemoveBgNotConfiguredError as exc:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "error": "Background removal is not configured",
+                "detail": "Set REMOVE_BG_API_KEY on the background-removal service, or keep the original photo.",
+            },
+        ) from exc
+    except RemoveBgAPIError as exc:
+        logger.warning("remove.bg request failed: %s", exc)
+        raise HTTPException(
+            status_code=exc.status_code,
             detail={
                 "error": "Background removal failed",
-                "detail": "AI model inference failed to isolate the subject. You can skip background removal and keep the original photo.",
+                "detail": f"{exc} You can keep the original photo instead.",
             },
         ) from exc
 

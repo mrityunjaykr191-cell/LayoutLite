@@ -6,9 +6,10 @@ from pydantic import BaseModel, Field
 
 class HealthResponse(BaseModel):
     status: str = Field(..., description="Service status, e.g. 'ok'")
-    model: str = Field(..., description="Configured segmentation model name")
-    ready: bool = Field(..., description="Whether model session is ready")
-    device: str = Field(default="cpu", description="Inference device")
+    model: str = Field(..., description="Configured background-removal provider")
+    ready: bool = Field(..., description="Whether provider credentials are configured")
+    device: str = Field(default="remote API", description="Processing provider")
+    error: Optional[str] = Field(default=None, description="Configuration guidance when unavailable")
 
 
 class ErrorResponse(BaseModel):

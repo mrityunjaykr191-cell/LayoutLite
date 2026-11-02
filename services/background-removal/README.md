@@ -1,20 +1,20 @@
 # Background Removal Service (Phase 4B Proof of Concept)
 
-A lightweight, privacy-first local microservice for optional portrait background removal using [`rembg`](https://github.com/danielgatis/rembg) and the fast `u2netp` model on CPU.
+A FastAPI service that validates portraits and forwards them in memory to the remove.bg API. Photos are sent to remove.bg for processing. The API key is configured on the server and is never exposed to the web client.
 
 ---
 
 ## 1. Key Features & Guarantees
 
-- **Local-Only Binding**: Listens exclusively on `127.0.0.1:8000` (loopback interface; never exposed to local network).
+- **Server-Side API Key**: Reads the remove.bg API key from `REMOVE_BG_API_KEY`.
 - **Strict CORS**: Accepts cross-origin requests solely from `http://localhost:5173` and `http://127.0.0.1:5173`.
-- **Zero Photo Retention**: All processing is strictly in-memory using `io.BytesIO`. Images are never written to disk, databases, or temporary caches.
-- **Fast Lightweight Model**: Configured with `u2netp` (~4.7 MB ONNX weights) for fast, responsive CPU inference.
+- **In-Memory Forwarding**: Uploaded and returned images are not written to disk by this service.
+- **Provider Processing**: Forwards the validated image to `https://api.remove.bg/v1.0/removebg` as `image_file`, with `size=auto`.
 - **Strict Boundary Validation**:
   - Rejects payloads exceeding 25 MB with `413 Content Too Large`.
   - Rejects empty uploads with `400 Bad Request`.
   - Inspects real image byte headers via Pillow, allowing only valid JPEG and PNG portraits.
-  - Safe error handling: never leaks Python tracebacks to clients.
+  - Safe error handling: never leaks Python tracebacks or the API key to clients.
 
 ---
 
@@ -27,7 +27,8 @@ services/background-removal/
 │   ├── __init__.py
 │   ├── main.py          # FastAPI application, route handlers, and CORS
 │   ├── schemas.py       # Pydantic response models
-│   └── segmenter.py     # u2netp session manager and in-memory inference
+│   ├── segmenter.py     # Retained legacy local segmentation implementation
+│   └── remove_bg_client.py # In-memory remove.bg API client
 ├── tests/
 │   ├── __init__.py
 │   └── test_api.py      # Automated pytest suite (offline, deterministic)
@@ -79,12 +80,12 @@ Checks whether the microservice is running and ready.
 ```json
 {
   "status": "ok",
-  "model": "u2netp",
+  "model": "remove.bg",
   "ready": false,
-  "device": "cpu"
+  "device": "remote API"
 }
 ```
-*(Note: `ready` becomes `true` once the session model is loaded into memory on first request or startup).*
+(`ready` is `true` when `REMOVE_BG_API_KEY` is configured.)
 
 ---
 
@@ -102,7 +103,9 @@ Accepts a single portrait photo as multipart form data and returns a transparent
   - `413 Content Too Large`: Upload exceeds maximum allowed limit.
   - `415 Unsupported Media Type`: Declared or detected format is not JPEG or PNG.
   - `429 Too Many Requests`: Abuse protection sliding-window rate limit exceeded.
-  - `500 Internal Server Error`: Segmentation model error (safe, non-leaking message).
+  - `429 Too Many Requests`: remove.bg rate limit reached.
+  - `502 Bad Gateway` / `504 Gateway Timeout`: remove.bg request failed or timed out.
+  - `503 Service Unavailable`: `REMOVE_BG_API_KEY` is not configured.
 
 ---
 
@@ -117,7 +120,7 @@ Accepts a single portrait photo as multipart form data and returns a transparent
 | `MAX_FILE_SIZE_BYTES` | `26214400` (25 MB) | Payload ceiling. |
 | `RATE_LIMIT_ENABLED` | `true` | Abuse protection toggle. |
 | `RATE_LIMIT_PER_MINUTE` | `20` | Max requests per IP per minute for background removal. |
-| `PREWARM_MODEL` | `false` (local) / `true` (container) | Pre-initialize ONNX model session during startup to avoid first-request latency. |
+| `REMOVE_BG_API_KEY` | *(required)* | Secret API key for remove.bg. Configure it in the service environment or a secret manager; never put it in frontend configuration or source control. |
 
 ---
 
@@ -135,7 +138,7 @@ gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/layoutlite-bg-removal:latest
 
 Run locally:
 ```bash
-docker run -p 8000:8000 -e ALLOWED_ORIGINS="http://localhost:5173" layoutlite-bg-removal:latest
+docker run -p 8000:8000 -e ALLOWED_ORIGINS="http://localhost:5173" -e REMOVE_BG_API_KEY layoutlite-bg-removal:latest
 ```
 
 ---
@@ -148,7 +151,7 @@ Run the test suite using pytest:
 .\.venv\Scripts\pytest.exe tests -v
 ```
 
-All 11 automated tests run in seconds completely offline with a mock segmenter, verifying:
+The automated API tests mock the provider and do not call remove.bg. Coverage includes:
 1. Health endpoint status and schema.
 2. PNG removal returning transparent RGBA PNG.
 3. JPEG removal returning transparent RGBA PNG.
@@ -157,9 +160,12 @@ All 11 automated tests run in seconds completely offline with a mock segmenter, 
 6. Empty file upload rejection (400).
 7. Unsupported image format (e.g. GIF) rejection (415).
 8. Payload exceeding 25 MB rejection (413).
-9. Safe 500 error reporting without traceback leakage.
+9. Safe upstream error reporting without traceback or API key leakage.
 10. Zero disk file leak verification.
 11. CORS header restrictions.
+12. Missing API-key handling.
+13. Forwarding of image bytes with detected MIME type.
+14. remove.bg URL, multipart fields, size, and API-key header.
 
 ---
 
@@ -179,4 +185,4 @@ curl.exe -X POST "http://127.0.0.1:8000/api/remove-background" `
   -F "file=@path\to\portrait.jpg" `
   --output "output_transparent.png"
 ```
-*(On first execution with real `rembg`, `u2netp.onnx` (~4.7 MB) will automatically download once to `~/.u2net/u2netp.onnx`).*
+Set `REMOVE_BG_API_KEY` in the environment before starting the service. Requests to remove.bg require internet access and may be subject to the provider's account limits.

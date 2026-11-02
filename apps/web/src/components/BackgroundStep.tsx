@@ -35,12 +35,12 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
   activeMode,
   onModeChange,
 }) => {
-  // Mode state: Local AI by default on first visit
+  // Mode state: local backend by default on first visit
   const [mode, setMode] = useState<BackgroundRemovalMode>(() =>
     activeMode ?? providerRegistry.getActiveMode()
   );
   const [hasConsent, setHasConsent] = useState<boolean>(() =>
-    providerRegistry.hasRemoteConsent()
+    providerRegistry.hasExternalProcessingConsent()
   );
   const [isConsentModalOpen, setIsConsentModalOpen] = useState<boolean>(false);
 
@@ -106,8 +106,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
   };
 
   const handleStartRemovalClick = () => {
-    // If Cloud AI is selected and consent has not been granted yet, show consent modal first
-    if (mode === 'remote' && !providerRegistry.hasRemoteConsent()) {
+    if (!providerRegistry.hasExternalProcessingConsent()) {
       setIsConsentModalOpen(true);
       return;
     }
@@ -115,14 +114,14 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
   };
 
   const handleConfirmConsent = () => {
-    providerRegistry.setRemoteConsent(true);
+    providerRegistry.setExternalProcessingConsent(true);
     setHasConsent(true);
     setIsConsentModalOpen(false);
     executeRemoval();
   };
 
   const handleRevokeConsent = () => {
-    providerRegistry.setRemoteConsent(false);
+    providerRegistry.setExternalProcessingConsent(false);
     setHasConsent(false);
   };
 
@@ -137,7 +136,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
       const provider = providerRegistry.getActiveProvider();
       const pngBlob = await provider.removeBackground(croppedBlob, {
         externalSignal: controller.signal,
-        timeoutMs: mode === 'remote' ? 45000 : 35000,
+        timeoutMs: 75000,
       });
 
       const newCutoutUrl = URL.createObjectURL(pngBlob);
@@ -214,7 +213,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   : 'text-[#777570] hover:text-[#393834]'
               }`}
             >
-              <span>Local AI</span>
+              <span>Local Service</span>
             </button>
             <button
               type="button"
@@ -227,7 +226,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   : 'text-[#777570] hover:text-[#393834]'
               }`}
             >
-              <span>Cloud AI</span>
+              <span>Cloud Service</span>
             </button>
           </div>
 
@@ -238,7 +237,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 <span className="h-1.5 w-1.5 rounded-full bg-[#777570] animate-pulse" />
                 Checking {isRemote ? 'cloud' : 'local'} service...
               </span>
-            ) : health?.ok ? (
+            ) : health?.ok && health.ready ? (
               <span
                 className="inline-flex items-center gap-1.5 rounded-md border border-[#E3E1DC] bg-[#FAF9F6] px-2.5 py-1 text-xs font-medium text-[#55534F]"
                 title={
@@ -248,7 +247,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 }
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
-                <span>{isRemote ? 'Cloud AI Ready' : 'AI Ready (Local)'}</span>
+                <span>{isRemote ? 'Cloud Service Ready' : 'Local Service Ready'}</span>
               </span>
             ) : (
               <span
@@ -271,12 +270,12 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
           </svg>
           <span>
             {mode === 'local'
-              ? 'Local processing on your computer (127.0.0.1:8000). No photos leave your machine.'
-              : 'Cloud processing via secure HTTPS. Photos are sent for temporary processing.'}
+              ? 'The local service sends your cropped photo to remove.bg over HTTPS for processing.'
+              : 'The cloud service sends your cropped photo to remove.bg over HTTPS for processing.'}
           </span>
         </div>
 
-        {isRemote && hasConsent && (
+        {hasConsent && (
           <div className="flex items-center gap-1.5 text-[11px]">
             <span className="text-emerald-700 font-medium">Consent Active</span>
             <span className="text-[#E3E1DC]">&middot;</span>
@@ -330,18 +329,21 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
         {/* Right Controls & Actions Pane (md:col-span-6) */}
         <div className="md:col-span-6 flex flex-col justify-between gap-4">
           <div className="flex flex-col gap-3">
-            {/* Local Offline Notice (when Local AI is selected and not running) */}
-            {mode === 'local' && !isCheckingHealth && !health?.ok && !isCutoutActive && (
+            {/* Local service offline notice */}
+            {mode === 'local' && !isCheckingHealth && !(health?.ok && health.ready) && !isCutoutActive && (
               <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-950">
                 <div className="flex items-start gap-2.5">
                   <svg className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   <div className="flex-1">
-                    <p className="font-semibold text-amber-950">Local AI Service Not Running</p>
+                    <p className="font-semibold text-amber-950">
+                      {health?.ok ? 'remove.bg API Key Not Configured' : 'Local Service Not Running'}
+                    </p>
                     <p className="mt-0.5 text-amber-800 leading-relaxed text-[11px]">
-                      The local background removal service is not detected at <code className="font-mono text-amber-900">http://127.0.0.1:8000</code>.
-                      Start it in your terminal with <code className="font-mono text-amber-900">python run.py</code>, click Check Again, or choose Keep Original Background.
+                      {health?.ok
+                        ? health.error ?? 'Set REMOVE_BG_API_KEY on the background-removal service.'
+                        : <>The local background removal service is not detected at <code className="font-mono text-amber-900">http://127.0.0.1:8000</code>. Start it in your terminal with <code className="font-mono text-amber-900">python run.py</code>, click Check Again, or choose Keep Original Background.</>}
                     </p>
                     <div className="mt-2.5">
                       <button
@@ -361,8 +363,8 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
               </div>
             )}
 
-            {/* Remote Offline or Unconfigured Notice (when Cloud AI is selected and not ready) */}
-            {mode === 'remote' && !isCheckingHealth && !health?.ok && !isCutoutActive && (
+            {/* Remote service offline or unconfigured notice */}
+            {mode === 'remote' && !isCheckingHealth && !(health?.ok && health.ready) && !isCutoutActive && (
               <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-950">
                 <div className="flex items-start gap-2.5">
                   <svg className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -371,13 +373,17 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   <div className="flex-1">
                     <p className="font-semibold text-amber-950">
                       {!providerRegistry.isRemoteConfigured()
-                        ? 'Cloud AI Endpoint Not Configured'
-                        : 'Cloud AI Service Unavailable'}
+                        ? 'Cloud Service Endpoint Not Configured'
+                        : health?.ok
+                        ? 'remove.bg API Key Not Configured'
+                        : 'Cloud Service Unavailable'}
                     </p>
                     <p className="mt-0.5 text-amber-800 leading-relaxed text-[11px]">
                       {!providerRegistry.isRemoteConfigured()
-                        ? 'The cloud background removal endpoint (VITE_REMOTE_BG_REMOVER_URL) is not set. You can use Local AI or proceed with your original photo.'
-                        : 'Cannot connect to the cloud background removal service. Check your connection or switch to Local AI.'}
+                        ? 'The cloud background removal endpoint (VITE_REMOTE_BG_REMOVER_URL) is not set. You can use the local service or keep your original photo.'
+                        : health?.ok
+                        ? health.error ?? 'Set REMOVE_BG_API_KEY on the background-removal service.'
+                        : 'Cannot connect to the cloud background removal service. Check your connection or switch to the local service.'}
                     </p>
                     <div className="mt-2.5 flex items-center gap-2">
                       <button
@@ -393,7 +399,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                         onClick={() => handleModeSelect('local')}
                         className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3 py-1 text-xs font-medium text-[#393834] hover:bg-[#FAF9F6] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                       >
-                        <span>Switch to Local AI</span>
+                        <span>Switch to Local Service</span>
                       </button>
                     </div>
                   </div>
@@ -412,12 +418,10 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#55534F] border-t-transparent shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-[#393834]">
-                      Removing Background with {isRemote ? 'Cloud AI' : 'Local AI'}...
+                      Removing Background with remove.bg...
                     </p>
                     <p className="mt-0.5 text-[#777570] text-[11px]">
-                      {isRemote
-                        ? 'Transmitting photo and isolating portrait subject. This takes 2–5 seconds.'
-                        : 'Isolating portrait subject on your device. This takes 1–3 seconds.'}
+                      Sending photo to remove.bg for processing. This may take a little while.
                     </p>
                   </div>
                 </div>
@@ -558,12 +562,12 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
         </div>
       </div>
 
-      {/* Explicit Remote Consent Modal Dialog */}
+      {/* Explicit external processing consent modal */}
       {isConsentModalOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="remote-consent-title"
+          aria-labelledby="external-processing-consent-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs"
         >
           <div className="w-full max-w-md rounded-xl border border-[#E3E1DC] bg-white p-5 shadow-lg">
@@ -574,19 +578,19 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 </svg>
               </div>
               <div>
-                <h3 id="remote-consent-title" className="text-base font-semibold text-[#393834]">
-                  Enable Cloud AI Processing?
+                <h3 id="external-processing-consent-title" className="text-base font-semibold text-[#393834]">
+                  Allow remove.bg Processing?
                 </h3>
                 <p className="mt-1 text-xs text-[#777570] leading-relaxed">
-                  Your cropped portrait photo will be transmitted over secure HTTPS to a remote processing service.
+                  When you choose Remove Background, your cropped portrait will be sent over HTTPS to remove.bg through the selected service.
                 </p>
               </div>
             </div>
 
             <div className="mt-3.5 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3 text-xs text-[#55534F] space-y-2 leading-relaxed">
-              <p>• <strong>Temporary processing:</strong> The service processes the photo in memory to remove the background and returns a transparent PNG.</p>
-              <p>• <strong>Privacy:</strong> The service architecture is designed not to retain or permanently store photos on disk or in databases.</p>
-              <p>• <strong>Control:</strong> You can revoke this consent at any time from this screen or switch back to Local AI.</p>
+              <p>• <strong>External provider:</strong> remove.bg processes the photo and returns a transparent PNG. Its data handling is governed by its own policies.</p>
+              <p>• <strong>Your choice:</strong> Continue only if you agree to send this photo to an external service. Choose Keep Original Background to avoid sending it.</p>
+              <p>• <strong>Control:</strong> This choice is saved in this browser and can be revoked from this screen.</p>
             </div>
 
             <div className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">

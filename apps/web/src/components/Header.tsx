@@ -35,14 +35,12 @@ export const Header: React.FC<HeaderProps> = ({ mode }) => {
         {/* Minimal Privacy Note */}
         <div
           className="inline-flex shrink-0 items-center gap-1.5 text-xs text-[#777570]"
-          title={isRemote ? 'Photo sent securely over HTTPS for temporary processing' : 'Photos are processed entirely on your device with local processing'}
+          title={`Background removal sends the cropped photo to remove.bg over HTTPS through the ${isRemote ? 'cloud' : 'local'} service`}
         >
-          <span className={`h-1.5 w-1.5 rounded-full ${isRemote ? 'bg-amber-600' : 'bg-emerald-600'}`} aria-hidden="true" />
-          <span className="sm:hidden text-[11px] font-medium text-[#777570]">{isRemote ? 'Cloud AI' : 'On-device'}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-600" aria-hidden="true" />
+          <span className="sm:hidden text-[11px] font-medium text-[#777570]">remove.bg</span>
           <span className="hidden sm:inline text-xs text-[#777570]">
-            {isRemote
-              ? 'Cloud processing • Photo sent securely for temporary processing'
-              : 'Local processing • On-device only'}
+            Background removal sends photo to remove.bg
           </span>
         </div>
       </div>
