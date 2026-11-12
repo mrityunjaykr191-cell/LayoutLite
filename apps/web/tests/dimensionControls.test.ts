@@ -111,8 +111,8 @@ describe('Dimension Controls & Validation', () => {
   });
 
   it('adheres to provisional default dimensions from shared package', () => {
-    assert.equal(PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS.widthMm, 35);
-    assert.equal(PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS.heightMm, 45);
+    assert.equal(PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS.widthMm, 25);
+    assert.equal(PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS.heightMm, 30);
     assert.equal(PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS.unitPreference, 'mm');
 
     const result = validateDimensionInputs(

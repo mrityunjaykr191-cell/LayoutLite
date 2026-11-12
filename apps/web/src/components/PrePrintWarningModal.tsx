@@ -86,9 +86,9 @@ export const PrePrintWarningModal: React.FC<PrePrintWarningModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E3E1DC] px-4 py-3.5 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-800">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FAF9F6] text-[#55534F]">
               <svg className="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" />
               </svg>
             </span>
             <div>
@@ -123,27 +123,27 @@ export const PrePrintWarningModal: React.FC<PrePrintWarningModalProps> = ({
           {/* Scale Comparison: Stacked on narrow phones (< 640px), Side-by-side on sm+ (>= 640px) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {/* Correct Setting */}
-            <div className="flex flex-col gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-emerald-950 font-semibold text-xs">
-                <svg className="h-4 w-4 shrink-0 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <div className="flex flex-col gap-1.5 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-[#393834] font-semibold text-xs">
+                <svg className="h-4 w-4 shrink-0 text-[#55534F]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m5 12 4 4L19 6" />
                 </svg>
                 <span>Correct: 100% Scale</span>
               </div>
-              <p className="text-[11px] text-emerald-900 leading-normal">
+              <p className="text-[11px] text-[#55534F] leading-normal">
                 Choose <strong>&ldquo;100%&rdquo;</strong> or <strong>&ldquo;Actual Size&rdquo;</strong> in the printer dialog to preserve exact physical millimeters.
               </p>
             </div>
 
             {/* Incorrect Setting */}
-            <div className="flex flex-col gap-1.5 rounded-lg border border-red-200 bg-red-50/70 p-3 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-red-950 font-semibold text-xs">
-                <svg className="h-4 w-4 shrink-0 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <div className="flex flex-col gap-1.5 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-[#393834] font-semibold text-xs">
+                <svg className="h-4 w-4 shrink-0 text-[#777570]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M18 6 6 18" />
                 </svg>
                 <span>Do Not Use: Fit to Page</span>
               </div>
-              <p className="text-[11px] text-red-900 leading-normal">
+              <p className="text-[11px] text-[#55534F] leading-normal">
                 Avoid <strong>&ldquo;Fit to Page&rdquo;</strong> or <strong>&ldquo;Shrink to Printable Area&rdquo;</strong>, which shrinks photos by 5% to 8%.
               </p>
             </div>

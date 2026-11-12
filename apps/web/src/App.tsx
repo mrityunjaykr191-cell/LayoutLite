@@ -261,7 +261,7 @@ export const App: React.FC = () => {
   return (
     <div className="flex min-h-dvh flex-col bg-[#F5F4F1] text-[#393834] antialiased">
       {/* Top Application Header */}
-      <Header mode={bgRemovalMode} />
+      <Header />
 
       {/* Workflow Stepper Navigation */}
       <Stepper currentStep={currentStep} />
@@ -414,7 +414,7 @@ export const App: React.FC = () => {
       </main>
 
       {/* Application Footer */}
-      <Footer mode={bgRemovalMode} />
+      <Footer />
     </div>
   );
 };

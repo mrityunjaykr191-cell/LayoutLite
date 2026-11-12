@@ -417,7 +417,7 @@ export const CropEditor: React.FC<CropEditorProps> = ({
         ref={stageRef}
         tabIndex={0}
         role="region"
-        aria-label="Interactive photo crop editor. Drag inside frame to reposition, drag handles to resize, use zoom slider or Ctrl + scroll to zoom."
+        aria-label="Interactive photo crop editor. Drag inside frame to reposition, drag handles to resize, use Ctrl + scroll to zoom."
         onKeyDown={handleKeyDown}
         onWheel={handleWheel}
         onPointerDown={handleStagePointerDown}
@@ -593,90 +593,43 @@ export const CropEditor: React.FC<CropEditorProps> = ({
       </div>
 
       {/* Control Toolbar */}
-      <div className="mt-3.5 sm:mt-4 flex flex-col gap-3 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3 sm:p-4">
-        {/* Zoom Controls */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#393834]">
-            <label htmlFor="crop-zoom-slider" className="cursor-pointer">Zoom</label>
-            <span className="font-mono font-medium text-[#55534F] tabular-nums">{cropSettings.zoom.toFixed(1)}×</span>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => handleZoomChange(cropSettings.zoom - 0.1)}
-              disabled={cropSettings.zoom <= MIN_ZOOM}
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-[#E3E1DC] bg-white text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] disabled:opacity-40 disabled:pointer-events-none font-bold text-base focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
-              aria-label="Zoom out"
-            >
-              −
-            </button>
-
-            <input
-              id="crop-zoom-slider"
-              type="range"
-              min={MIN_ZOOM}
-              max={MAX_ZOOM}
-              step={0.05}
-              value={cropSettings.zoom}
-              onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
-              className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-[#E3E1DC] accent-[#55534F] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none"
-              aria-label="Zoom level"
-            />
-
-            <button
-              type="button"
-              onClick={() => handleZoomChange(cropSettings.zoom + 0.1)}
-              disabled={cropSettings.zoom >= MAX_ZOOM}
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-[#E3E1DC] bg-white text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] disabled:opacity-40 disabled:pointer-events-none font-bold text-base focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
-              aria-label="Zoom in"
-            >
-              +
-            </button>
-          </div>
-        </div>
-
+      <div className="mt-3.5 sm:mt-4 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3 sm:p-4">
         {/* Rotate and Reset Action Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#E3E1DC] pt-3">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleRotate90}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3.5 py-2 text-xs font-medium text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleRotate90}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3.5 py-2 text-xs font-medium text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+          >
+            <svg
+              className="h-4 w-4 shrink-0 text-[#55534F]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
             >
-              <svg
-                className="h-4 w-4 shrink-0 text-[#55534F]"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              <span>Rotate 90°</span>
-              {cropSettings.rotation !== 0 && (
-                <span className="rounded bg-[#E3E1DC] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#393834] tabular-nums">
-                  {cropSettings.rotation}°
-                </span>
-              )}
-            </button>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            <span>Rotate 90°</span>
+            {cropSettings.rotation !== 0 && (
+              <span className="rounded bg-[#E3E1DC] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#393834] tabular-nums">
+                {cropSettings.rotation}°
+              </span>
+            )}
+          </button>
 
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3.5 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
-            >
-              <span>Reset</span>
-            </button>
-          </div>
-
-          <div className="text-xs text-[#777570] hidden sm:block">
-            Arrow keys to pan • + / − to zoom
-          </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#E3E1DC] bg-white px-3.5 py-2 text-xs font-medium text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6] active:bg-[#F0EEEA] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+          >
+            <span>Reset</span>
+          </button>
         </div>
       </div>
 

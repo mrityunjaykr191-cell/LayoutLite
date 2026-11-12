@@ -231,7 +231,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
           </div>
 
           {/* Service Status Indicator for Active Mode */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {isCheckingHealth ? (
               <span className="inline-flex items-center gap-1.5 text-xs text-[#777570]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#777570] animate-pulse" />
@@ -258,36 +258,17 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 <span>{isRemote ? 'Cloud Service Not Ready' : 'Local AI Offline'}</span>
               </span>
             )}
+            {mode === 'remote' && hasConsent && (
+              <button
+                type="button"
+                onClick={handleRevokeConsent}
+                className="inline-flex min-h-[44px] items-center rounded px-2 text-xs text-[#55534F] underline hover:text-[#393834] focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none"
+              >
+                Revoke Consent
+              </button>
+            )}
           </div>
         </div>
-      </div>
-
-      {/* Mode Explanation & Consent Status Banner */}
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] px-3.5 py-2 text-xs text-[#777570]">
-        <div className="flex items-center gap-2">
-          <svg className="h-3.5 w-3.5 shrink-0 text-[#777570]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>
-            {mode === 'local'
-              ? 'Local AI uses rembg (u2netp model) running on your computer. 100% private & offline.'
-              : 'The cloud service sends your cropped photo to remove.bg over HTTPS for processing.'}
-          </span>
-        </div>
-
-        {mode === 'remote' && hasConsent && (
-          <div className="flex items-center gap-1.5 text-[11px]">
-            <span className="text-emerald-700 font-medium">Consent Active</span>
-            <span className="text-[#E3E1DC]">&middot;</span>
-            <button
-              type="button"
-              onClick={handleRevokeConsent}
-              className="text-[#55534F] hover:text-[#393834] underline focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none rounded"
-            >
-              Revoke Consent
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Main Content Layout */}

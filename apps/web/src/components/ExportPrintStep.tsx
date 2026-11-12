@@ -155,9 +155,6 @@ export const ExportPrintStep: React.FC<ExportPrintStepProps> = ({
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#393834]">
               Print &amp; PDF Export
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-[#777570]">
-              Download your print-ready 300 DPI A4 PDF or print directly from your browser.
-            </p>
           </div>
 
           {/* Quick Back Actions */}
@@ -316,20 +313,18 @@ export const ExportPrintStep: React.FC<ExportPrintStepProps> = ({
             </div>
 
             {/* Optional Print Elements (Calibration Ruler Toggle) */}
-            <div className="rounded-lg border border-[#E3E1DC] bg-[#FAF9F6] p-3.5 flex flex-col gap-2">
-              <div className="flex items-center gap-2.5">
-                <input
-                  id="export-calibration-ruler-toggle"
-                  type="checkbox"
-                  checked={includeCalibrationRuler}
-                  onChange={(e) => setIncludeCalibrationRuler(e.target.checked)}
-                  className="h-4 w-4 rounded border-[#E3E1DC] accent-[#55534F] focus:ring-[#55534F]"
-                />
-                <label htmlFor="export-calibration-ruler-toggle" className="text-xs font-medium text-[#393834] cursor-pointer">
-                  Include 50 mm Calibration Ruler (Verify 100% scale at bottom)
-                </label>
-              </div>
-            </div>
+            <label className="flex min-h-[44px] items-center gap-2.5 cursor-pointer">
+              <input
+                id="export-calibration-ruler-toggle"
+                type="checkbox"
+                checked={includeCalibrationRuler}
+                onChange={(e) => setIncludeCalibrationRuler(e.target.checked)}
+                className="h-4 w-4 rounded border-[#E3E1DC] accent-[#55534F] focus:ring-[#55534F]"
+              />
+              <span className="text-xs font-medium text-[#393834]">
+                Include 50 mm Calibration Ruler
+              </span>
+            </label>
 
             {/* Primary Action Buttons */}
             <div className="flex flex-col gap-2.5">
@@ -391,24 +386,6 @@ export const ExportPrintStep: React.FC<ExportPrintStepProps> = ({
                 </div>
               </div>
             )}
-
-            {/* 100% Scale Educational Callout */}
-            <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-4 text-xs text-amber-950 shadow-2xs">
-              <div className="flex items-start gap-2.5">
-                <svg className="h-4.5 w-4.5 text-amber-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <div>
-                  <p className="font-semibold text-amber-950">Important Print Setting</p>
-                  <p className="mt-1 text-amber-900 leading-relaxed">
-                    Always set printer scaling to <strong>100% (Actual Size)</strong>. Consumer printers often default to &ldquo;Fit to Printable Area&rdquo;, which shrinks photos by 5–8%.
-                  </p>
-                  <p className="mt-1.5 text-amber-950 font-medium">
-                    Use the 50 mm calibration ruler at the bottom of the printed page to verify physical accuracy with a real ruler.
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {/* Navigation and Reset Action */}
             <div className="mt-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-[#E3E1DC] pt-4 safe-area-bottom">

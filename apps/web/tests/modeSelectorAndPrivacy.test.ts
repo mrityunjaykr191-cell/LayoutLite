@@ -220,14 +220,18 @@ describe('Phase 3: Background Removal Mode Selector & Privacy Indicators', () =>
       assert.ok(bgStepContent.includes('aria-checked={mode === \'remote\'}'), 'Must track active remote radio');
     });
 
-    it('discloses processing details accurately for local and cloud modes', () => {
+    it('omits the mode explanation banner while retaining the explicit cloud consent notice', () => {
       assert.ok(
-        bgStepContent.includes('Local AI uses rembg (u2netp model) running on your computer. 100% private & offline.'),
-        'Must disclose local on-device rembg u2netp processing'
+        !bgStepContent.includes('Local AI uses rembg (u2netp model) running on your computer. 100% private & offline.'),
+        'The removed mode explanation banner must stay absent'
       );
       assert.ok(
-        bgStepContent.includes('The cloud service sends your cropped photo to remove.bg over HTTPS for processing.'),
-        'Must disclose external processing from the cloud service'
+        !bgStepContent.includes('The cloud service sends your cropped photo to remove.bg over HTTPS for processing.'),
+        'The removed mode explanation banner must stay absent'
+      );
+      assert.ok(
+        bgStepContent.includes('your cropped portrait will be sent over HTTPS to remove.bg'),
+        'Must disclose external processing before requesting consent'
       );
     });
 
@@ -262,27 +266,13 @@ describe('Phase 3: Background Removal Mode Selector & Privacy Indicators', () =>
     });
   });
 
-  describe('5. Global Dynamic Privacy Indicators', () => {
-    it('Header discloses remove.bg processing in remote mode and local on-device in local mode', () => {
-      assert.ok(
-        headerContent.includes('Background removal sends photo to remove.bg'),
-        'Header must disclose external provider for remote mode'
-      );
-      assert.ok(
-        headerContent.includes('Local processing · On-device only'),
-        'Header must disclose on-device privacy for local mode'
-      );
-    });
-
-    it('Footer discloses remove.bg processing in remote mode and local on-device in local mode', () => {
-      assert.ok(
-        footerContent.includes('Background removal sends the cropped photo to remove.bg over HTTPS'),
-        'Footer must disclose external provider for remote mode'
-      );
-      assert.ok(
-        footerContent.includes('Local background removal processes photos on-device with rembg (u2netp)'),
-        'Footer must disclose on-device privacy for local mode'
-      );
+  describe('5. Global Privacy Indicators', () => {
+    it('omits dynamic background-removal notices from the header and footer', () => {
+      assert.ok(!headerContent.includes('isRemote'), 'Header must not render a mode-based privacy indicator');
+      assert.ok(!headerContent.includes('Background removal sends photo to remove.bg'));
+      assert.ok(!footerContent.includes('isRemote'), 'Footer must not render a mode-based privacy indicator');
+      assert.ok(!footerContent.includes('Background removal sends the cropped photo to remove.bg'));
+      assert.ok(footerContent.includes('LayoutLite — Accurate portrait photo tiling for physical printing.'));
     });
 
     it('UploadDropzone discloses cloud remove.bg or on-device rembg depending on mode', () => {

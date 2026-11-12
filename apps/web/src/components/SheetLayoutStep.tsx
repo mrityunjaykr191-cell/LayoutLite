@@ -279,12 +279,7 @@ export const SheetLayoutStep: React.FC<SheetLayoutStepProps> = ({
                     : 'border-[#E3E1DC] bg-white text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6]'
                 }`}
               >
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-sm font-semibold text-[#393834]">Single Row</span>
-                  <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-[#E3E1DC] text-[#393834]">
-                    Reference
-                  </span>
-                </div>
+                <span className="text-sm font-semibold text-[#393834]">Single Row</span>
                 <span className="text-xs text-[#777570] font-normal mt-0.5">
                   Horizontal row across top of sheet
                 </span>
@@ -299,12 +294,7 @@ export const SheetLayoutStep: React.FC<SheetLayoutStepProps> = ({
                     : 'border-[#E3E1DC] bg-white text-[#777570] hover:text-[#393834] hover:bg-[#FAF9F6]'
                 }`}
               >
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-sm font-semibold text-[#393834]">Balanced Grid</span>
-                  <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-[#E3E1DC] text-[#777570]">
-                    Multi-Row
-                  </span>
-                </div>
+                <span className="text-sm font-semibold text-[#393834]">Balanced Grid</span>
                 <span className="text-xs text-[#777570] font-normal mt-0.5">
                   Evenly distributes copies in rows &amp; columns
                 </span>

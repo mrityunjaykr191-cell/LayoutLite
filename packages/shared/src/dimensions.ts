@@ -1,11 +1,7 @@
 /**
  * Configurable physical photo dimensions and boundary validation.
  *
- * NOTE ON PRODUCT DEFAULTS:
- * No physical photo size (such as 35x45 mm or 50.8x50.8 mm) has been established
- * as the confirmed product default. The sample reference PDF has not yet been physically
- * measured. The provisional configuration below serves strictly as a temporary placeholder
- * that can be easily updated in one central location once physical measurements are verified.
+ * The default is a configurable starting point, not a country-specific compliance size.
  */
 
 export const MIN_PHOTO_DIMENSION_MM = 15;
@@ -30,15 +26,12 @@ export interface DimensionValidationResult {
 }
 
 /**
- * PROVISIONAL DEFAULT CONFIGURATION:
- * This is an unconfirmed, temporary placeholder configuration.
- * It is NOT a confirmed product default and must not be presented as one.
- * Update this single constant once the reference sample's physical dimensions
- * have been measured with physical calipers/rulers.
+ * Provisional default requested for everyday document photos.
+ * Update this single constant to change the starting physical dimensions.
  */
 export const PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS: PhotoDimensions = Object.freeze({
-  widthMm: 35,
-  heightMm: 45,
+  widthMm: 25,
+  heightMm: 30,
   unitPreference: 'mm',
 });
 

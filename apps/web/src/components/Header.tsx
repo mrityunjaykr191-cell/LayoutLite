@@ -1,15 +1,5 @@
 import React from 'react';
-import type { BackgroundRemovalMode } from '../services/backgroundRemoval/types.ts';
-import { providerRegistry } from '../services/backgroundRemovalClient.ts';
-
-interface HeaderProps {
-  readonly mode?: BackgroundRemovalMode;
-}
-
-export const Header: React.FC<HeaderProps> = ({ mode }) => {
-  const activeMode = mode ?? providerRegistry.getActiveMode();
-  const isRemote = activeMode === 'remote';
-
+export const Header: React.FC = () => {
   return (
     <header className="border-b border-[#E3E1DC] bg-white no-print">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-3 py-2.5 sm:px-6 sm:py-3.5">
@@ -30,29 +20,6 @@ export const Header: React.FC<HeaderProps> = ({ mode }) => {
           <p className="hidden sm:block mt-0.5 text-xs text-[#777570]">
             Prepare, crop, and tile portrait photos onto an A4 sheet for physical printing
           </p>
-        </div>
-
-        {/* Minimal Privacy Note */}
-        <div
-          className="inline-flex shrink-0 items-center gap-1.5 text-xs text-[#777570]"
-          title={
-            isRemote
-              ? 'Cloud background removal sends cropped photo to remove.bg over HTTPS'
-              : 'Local background removal runs on-device using rembg (u2netp). No photos leave your computer.'
-          }
-        >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${isRemote ? 'bg-amber-600' : 'bg-emerald-600'}`}
-            aria-hidden="true"
-          />
-          <span className="sm:hidden text-[11px] font-medium text-[#777570]">
-            {isRemote ? 'remove.bg' : 'On-device'}
-          </span>
-          <span className="hidden sm:inline text-xs text-[#777570]">
-            {isRemote
-              ? 'Background removal sends photo to remove.bg'
-              : 'Local processing · On-device only'}
-          </span>
         </div>
       </div>
     </header>

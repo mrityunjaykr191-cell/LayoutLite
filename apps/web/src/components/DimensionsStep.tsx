@@ -144,10 +144,10 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
 
   const handleResetToProvisional = () => {
     handleApplyQuickSize({
-      label: '35 × 45 mm',
+      label: '25 × 30 mm',
       widthMm: PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS.widthMm,
       heightMm: PROVISIONAL_DEFAULT_PHOTO_DIMENSIONS.heightMm,
-      description: 'Standard portrait format',
+      description: 'Default portrait format',
     });
   };
 
@@ -172,7 +172,7 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
             </h2>
             {isProvisionalDefault && (
               <span className="hidden sm:inline-flex rounded-md bg-[#FAF9F6] px-2 py-0.5 text-xs font-medium text-[#777570] border border-[#E3E1DC]">
-                Default 35 × 45 mm
+                Default 25 × 30 mm
               </span>
             )}
           </div>
@@ -340,14 +340,10 @@ export const DimensionsStep: React.FC<DimensionsStepProps> = ({
                     onClick={handleResetToProvisional}
                     className="text-xs font-medium text-[#55534F] hover:text-[#393834] underline touch-press"
                   >
-                    Reset to 35 × 45 mm
+                    Reset to 25 × 30 mm
                   </button>
                 )}
               </div>
-              <p className="mt-0.5 text-xs text-[#777570]">
-                Quick convenience formats for applications and cards:
-              </p>
-
               <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-2">
                 {COMMON_SIZE_OPTIONS.map((opt) => {
                   const isCurrent =
