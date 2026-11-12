@@ -1,6 +1,7 @@
 /**
  * Remote background removal provider.
- * Connects to the deployed HTTPS backend service (e.g. Google Cloud Run).
+ * Connects to the same-origin Vercel serverless function (/api/remove-background) by default,
+ * or an explicitly configured HTTPS backend service (e.g. Google Cloud Run).
  * Strictly requires explicit user consent before transmitting any photo data.
  */
 
@@ -23,6 +24,7 @@ export const REMOTE_HEALTH_CHECK_TIMEOUT_MS = 5000;
 export interface RemoteProviderConfig {
   readonly endpointUrl?: string;
   readonly getConsent?: () => boolean;
+  readonly isConfigured?: boolean;
 }
 
 export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvider {
@@ -30,29 +32,49 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
   readonly isRemote: boolean = true;
   readonly endpointUrl: string;
   private readonly getConsent?: () => boolean;
+  private readonly _isConfigured: boolean;
 
   constructor(config: RemoteProviderConfig = {}) {
     const metaEnv =
       typeof import.meta !== 'undefined'
         ? (import.meta as unknown as { env?: Record<string, string | undefined> })?.env
         : undefined;
-    this.endpointUrl =
-      config.endpointUrl ??
-      (metaEnv?.VITE_REMOTE_BG_REMOVER_URL
-        ? String(metaEnv.VITE_REMOTE_BG_REMOVER_URL).trim()
-        : '');
+
+    // Custom endpoint URL if specified via config or Vite env variable
+    const configuredUrl =
+      config.endpointUrl !== undefined
+        ? config.endpointUrl
+        : (metaEnv?.VITE_REMOTE_BG_REMOVER_URL
+            ? String(metaEnv.VITE_REMOTE_BG_REMOVER_URL).trim()
+            : '');
+
+    this.endpointUrl = configuredUrl ? configuredUrl.trim().replace(/\/+$/, '') : '';
     this.getConsent = config.getConsent;
+
+    // Provider is configured by default for production same-origin (/api/remove-background),
+    // unless explicitly disabled or given an empty string in tests
+    if (config.isConfigured !== undefined) {
+      this._isConfigured = config.isConfigured;
+    } else if (config.endpointUrl === '') {
+      this._isConfigured = false;
+    } else {
+      this._isConfigured = true;
+    }
   }
 
   isConfigured(): boolean {
-    if (this.endpointUrl && this.endpointUrl.trim().length > 0) {
-      return true;
-    }
-    // In browser runtime, relative /api routes (e.g. Vercel Serverless) are available
-    if (typeof window !== 'undefined') {
-      return true;
-    }
-    return false;
+    return this._isConfigured;
+  }
+
+  /**
+   * Helper to resolve the target URL for an API route.
+   * If endpointUrl or customBaseUrl is set, uses `${base}${route}`.
+   * Otherwise returns relative `${route}` for same-origin production deployment.
+   */
+  resolveUrl(route: string, customBaseUrl?: string): string {
+    const base = (customBaseUrl !== undefined ? customBaseUrl : this.endpointUrl).trim().replace(/\/+$/, '');
+    const cleanRoute = route.startsWith('/') ? route : `/${route}`;
+    return base ? `${base}${cleanRoute}` : cleanRoute;
   }
 
   async checkHealth(options?: {
@@ -71,9 +93,10 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
 
     const timeout = options?.timeoutMs ?? REMOTE_HEALTH_CHECK_TIMEOUT_MS;
     const { signal, cleanup } = createCombinedSignal(timeout, options?.externalSignal);
+    const targetUrl = this.resolveUrl('/api/health');
 
     try {
-      const response = await fetch(`${this.endpointUrl}/api/health`, {
+      const response = await fetch(targetUrl, {
         method: 'GET',
         headers: { Accept: 'application/json' },
         signal,
@@ -84,7 +107,7 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
           ok: false,
           ready: false,
           mode: 'remote',
-          endpointUrl: this.endpointUrl,
+          endpointUrl: this.endpointUrl || '/api/health',
           error: `Cloud service returned HTTP ${response.status}`,
         };
       }
@@ -94,7 +117,7 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
         ok: data.status === 'ok',
         ready: Boolean(data.ready),
         mode: 'remote',
-        endpointUrl: this.endpointUrl,
+        endpointUrl: this.endpointUrl || '/api/health',
         model: typeof data.model === 'string' ? data.model : undefined,
         device: typeof data.device === 'string' ? data.device : undefined,
         error: typeof data.error === 'string' ? data.error : undefined,
@@ -106,7 +129,7 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
           ok: false,
           ready: false,
           mode: 'remote',
-          endpointUrl: this.endpointUrl,
+          endpointUrl: this.endpointUrl || '/api/health',
           error: 'Cloud health check timed out or was cancelled',
         };
       }
@@ -114,7 +137,7 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
         ok: false,
         ready: false,
         mode: 'remote',
-        endpointUrl: this.endpointUrl,
+        endpointUrl: this.endpointUrl || '/api/health',
         error: error?.message || 'Cloud service unreachable',
       };
     } finally {
@@ -131,12 +154,12 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
       throw new RemoteConsentRequiredError();
     }
 
-    // 2. Validate endpoint
-    const baseUrl = (options.baseUrl ?? this.endpointUrl).trim();
-    if (!baseUrl) {
+    // 2. Validate endpoint configuration
+    if (!this.isConfigured() && !options.baseUrl) {
       throw new RemoteNotConfiguredError();
     }
 
+    const targetUrl = this.resolveUrl('/api/remove-background', options.baseUrl);
     const timeout = options.timeoutMs ?? DEFAULT_REMOTE_TIMEOUT_MS;
     const { signal, cleanup } = createCombinedSignal(timeout, options.externalSignal);
 
@@ -144,7 +167,7 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
     formData.append('file', imageBlob, 'photo.jpg');
 
     try {
-      const response = await fetch(`${baseUrl}/api/remove-background`, {
+      const response = await fetch(targetUrl, {
         method: 'POST',
         body: formData,
         headers: {
@@ -184,6 +207,12 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
           throw new BackgroundRemovalError(
             errorDetail ? `Cloud service rate limit reached: ${errorDetail}` : 'Cloud service rate limit reached. Please wait a moment before trying again.',
             429
+          );
+        }
+        if (response.status === 503) {
+          throw new BackgroundRemovalError(
+            errorDetail || 'Cloud background removal is not configured. Verify REMOVE_BG_API_KEY in Vercel settings.',
+            503
           );
         }
         if (response.status === 500) {

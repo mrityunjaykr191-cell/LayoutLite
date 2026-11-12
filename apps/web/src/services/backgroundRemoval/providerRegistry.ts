@@ -169,17 +169,19 @@ class ProviderRegistry {
   /**
    * Configure custom endpoints (used for testing or custom configurations).
    */
-  configureEndpoints(config: { localUrl?: string; remoteUrl?: string }): void {
+  configureEndpoints(config: {
+    localUrl?: string;
+    remoteUrl?: string;
+    isRemoteConfigured?: boolean;
+  }): void {
     if (config.localUrl) {
-      this.localProvider = new LocalBackgroundRemovalProvider(
-        config.localUrl,
-        () => this.hasExternalProcessingConsent()
-      );
+      this.localProvider = new LocalBackgroundRemovalProvider(config.localUrl);
     }
-    if (config.remoteUrl !== undefined) {
+    if (config.remoteUrl !== undefined || config.isRemoteConfigured !== undefined) {
       this.remoteProvider = new RemoteBackgroundRemovalProvider({
         endpointUrl: config.remoteUrl,
         getConsent: () => this.hasExternalProcessingConsent(),
+        isConfigured: config.isRemoteConfigured,
       });
     }
   }

@@ -192,7 +192,54 @@ describe('Dual Background Removal Architecture', () => {
       assert.equal(provider.isConfigured(), true);
     });
 
-    it('detects unconfigured remote endpoint', async () => {
+    it('uses same-origin /api/health and /api/remove-background by default without requiring environment variables', async () => {
+      setupTestEnvironment();
+      const provider = new RemoteBackgroundRemovalProvider({
+        getConsent: () => true,
+      });
+
+      assert.equal(provider.mode, 'remote');
+      assert.equal(provider.isRemote, true);
+      assert.equal(provider.endpointUrl, '');
+      assert.equal(provider.isConfigured(), true);
+
+      const requestedUrls: string[] = [];
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async (input, init) => {
+        requestedUrls.push(String(input));
+        if (String(input) === '/api/health') {
+          return new Response(
+            JSON.stringify({ status: 'ok', ready: true, model: 'remove.bg API', device: 'Cloud' }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        if (String(input) === '/api/remove-background') {
+          assert.equal(init?.method, 'POST');
+          const body = init?.body as FormData;
+          assert.ok(body.has('file'));
+          return new Response(new Blob(['png-bytes'], { type: 'image/png' }), {
+            status: 200,
+            headers: { 'Content-Type': 'image/png' },
+          });
+        }
+        throw new Error(`Unexpected request to ${String(input)}`);
+      };
+
+      try {
+        const health = await provider.checkHealth();
+        assert.equal(health.ok, true);
+        assert.equal(health.ready, true);
+        assert.equal(requestedUrls[0], '/api/health');
+
+        const resultBlob = await provider.removeBackground(new Blob(['test-photo']));
+        assert.equal(resultBlob.type, 'image/png');
+        assert.equal(requestedUrls[1], '/api/remove-background');
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it('detects unconfigured remote endpoint when explicitly empty', async () => {
       setupTestEnvironment();
       const provider = new RemoteBackgroundRemovalProvider({ endpointUrl: '' });
       assert.equal(provider.isConfigured(), false);
