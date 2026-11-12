@@ -106,7 +106,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
   };
 
   const handleStartRemovalClick = () => {
-    if (!providerRegistry.hasExternalProcessingConsent()) {
+    if (mode === 'remote' && !providerRegistry.hasExternalProcessingConsent()) {
       setIsConsentModalOpen(true);
       return;
     }
@@ -205,19 +205,6 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
             <button
               type="button"
               role="radio"
-              aria-checked={mode === 'local'}
-              onClick={() => handleModeSelect('local')}
-              className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
-                mode === 'local'
-                  ? 'bg-white text-[#393834] font-semibold shadow-2xs border border-[#E3E1DC]'
-                  : 'text-[#777570] hover:text-[#393834]'
-              }`}
-            >
-              <span>Local Service</span>
-            </button>
-            <button
-              type="button"
-              role="radio"
               aria-checked={mode === 'remote'}
               onClick={() => handleModeSelect('remote')}
               className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
@@ -226,7 +213,20 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   : 'text-[#777570] hover:text-[#393834]'
               }`}
             >
-              <span>Cloud Service</span>
+              <span>Cloud AI (remove.bg)</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === 'local'}
+              onClick={() => handleModeSelect('local')}
+              className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none ${
+                mode === 'local'
+                  ? 'bg-white text-[#393834] font-semibold shadow-2xs border border-[#E3E1DC]'
+                  : 'text-[#777570] hover:text-[#393834]'
+              }`}
+            >
+              <span>Local AI (u2netp)</span>
             </button>
           </div>
 
@@ -242,7 +242,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 className="inline-flex items-center gap-1.5 rounded-md border border-[#E3E1DC] bg-[#FAF9F6] px-2.5 py-1 text-xs font-medium text-[#55534F]"
                 title={
                   isRemote
-                    ? `Cloud service ready at ${health.endpointUrl}`
+                    ? `Cloud service ready at ${health.endpointUrl || 'Vercel API'}`
                     : `Local service running at ${health.endpointUrl}`
                 }
               >
@@ -255,7 +255,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 title={health?.error ?? 'Service offline'}
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-600" aria-hidden="true" />
-                <span>{isRemote ? 'Cloud Service Offline' : 'AI Service Offline'}</span>
+                <span>{isRemote ? 'Cloud Service Not Ready' : 'Local AI Offline'}</span>
               </span>
             )}
           </div>
@@ -270,12 +270,12 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
           </svg>
           <span>
             {mode === 'local'
-              ? 'The local service sends your cropped photo to remove.bg over HTTPS for processing.'
+              ? 'Local AI uses rembg (u2netp model) running on your computer. 100% private & offline.'
               : 'The cloud service sends your cropped photo to remove.bg over HTTPS for processing.'}
           </span>
         </div>
 
-        {hasConsent && (
+        {mode === 'remote' && hasConsent && (
           <div className="flex items-center gap-1.5 text-[11px]">
             <span className="text-emerald-700 font-medium">Consent Active</span>
             <span className="text-[#E3E1DC]">&middot;</span>
@@ -338,17 +338,47 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   </svg>
                   <div className="flex-1">
                     <p className="font-semibold text-amber-950">
-                      {health?.ok ? 'remove.bg API Key Not Configured' : 'Local Service Not Running'}
+                      Local Service Not Running
                     </p>
                     <p className="mt-0.5 text-amber-800 leading-relaxed text-[11px]">
-                      {health?.ok
-                        ? health.error ?? 'Set REMOVE_BG_API_KEY on the background-removal service.'
-                        : <>The local background removal service is not detected at <code className="font-mono text-amber-900">http://127.0.0.1:8000</code>. Start it in your terminal with <code className="font-mono text-amber-900">python run.py</code>, click Check Again, or choose Keep Original Background.</>}
+                      The local background removal service is not detected at <code className="font-mono text-amber-900">http://127.0.0.1:8000</code>. Start it in your terminal with <code className="font-mono text-amber-900">python run.py</code>, click Check Again, or choose Keep Original Background.
                     </p>
                     <div className="mt-2.5">
                       <button
                         type="button"
                         onClick={() => performHealthCheck('local')}
+                        disabled={isCheckingHealth}
+                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-950 hover:bg-amber-100/60 focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Check Again</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Cloud service offline / unconfigured notice */}
+            {mode === 'remote' && !isCheckingHealth && !(health?.ok && health.ready) && !isCutoutActive && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-950">
+                <div className="flex items-start gap-2.5">
+                  <svg className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="font-semibold text-amber-950">
+                      Cloud AI Service Not Configured
+                    </p>
+                    <p className="mt-0.5 text-amber-800 leading-relaxed text-[11px]">
+                      {health?.error || 'Set REMOVE_BG_API_KEY in your Vercel project Environment Variables, or switch to Local Service.'}
+                    </p>
+                    <div className="mt-2.5">
+                      <button
+                        type="button"
+                        onClick={() => performHealthCheck('remote')}
                         disabled={isCheckingHealth}
                         className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-950 hover:bg-amber-100/60 focus-visible:ring-2 focus-visible:ring-[#55534F] focus-visible:outline-none touch-press"
                       >

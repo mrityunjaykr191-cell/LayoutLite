@@ -45,7 +45,14 @@ export class RemoteBackgroundRemovalProvider implements BackgroundRemovalProvide
   }
 
   isConfigured(): boolean {
-    return Boolean(this.endpointUrl && this.endpointUrl.trim().length > 0);
+    if (this.endpointUrl && this.endpointUrl.trim().length > 0) {
+      return true;
+    }
+    // In browser runtime, relative /api routes (e.g. Vercel Serverless) are available
+    if (typeof window !== 'undefined') {
+      return true;
+    }
+    return false;
   }
 
   async checkHealth(options?: {

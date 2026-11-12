@@ -1,6 +1,7 @@
 /**
  * Local background removal provider.
- * Communicates with the local backend, which forwards removal requests to remove.bg.
+ * Communicates with the local FastAPI backend (127.0.0.1:8000), which processes
+ * portrait photos locally on-device using rembg with the u2netp model.
  */
 
 import type {
@@ -11,7 +12,6 @@ import type {
 } from './types.ts';
 import {
   BackgroundRemovalError,
-  RemoteConsentRequiredError,
 } from './errors.ts';
 import { createCombinedSignal } from './signalUtils.ts';
 
@@ -23,14 +23,12 @@ export class LocalBackgroundRemovalProvider implements BackgroundRemovalProvider
   readonly mode: BackgroundRemovalMode = 'local';
   readonly isRemote: boolean = false;
   readonly endpointUrl: string;
-  private readonly getConsent: () => boolean;
 
   constructor(
     endpointUrl: string = DEFAULT_LOCAL_ENDPOINT,
-    getConsent: () => boolean = () => false
+    _getConsent?: () => boolean
   ) {
     this.endpointUrl = endpointUrl;
-    this.getConsent = getConsent;
   }
 
   async checkHealth(options?: {
@@ -94,10 +92,6 @@ export class LocalBackgroundRemovalProvider implements BackgroundRemovalProvider
     imageBlob: Blob,
     options: RemoveBackgroundOptions = {}
   ): Promise<Blob> {
-    if (!this.getConsent()) {
-      throw new RemoteConsentRequiredError();
-    }
-
     const baseUrl = options.baseUrl ?? this.endpointUrl;
     const timeout = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const { signal, cleanup } = createCombinedSignal(timeout, options.externalSignal);

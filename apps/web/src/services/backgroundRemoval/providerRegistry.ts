@@ -30,15 +30,12 @@ function getStorage(): Storage | null {
 class ProviderRegistry {
   private localProvider: LocalBackgroundRemovalProvider;
   private remoteProvider: RemoteBackgroundRemovalProvider;
-  private inMemoryMode: BackgroundRemovalMode = 'local';
+  private inMemoryMode: BackgroundRemovalMode = 'remote';
   private inMemoryConsent: boolean = false;
   private listeners: Set<RegistryListener> = new Set();
 
   constructor() {
-    this.localProvider = new LocalBackgroundRemovalProvider(
-      undefined,
-      () => this.hasExternalProcessingConsent()
-    );
+    this.localProvider = new LocalBackgroundRemovalProvider(undefined);
     this.remoteProvider = new RemoteBackgroundRemovalProvider({
       getConsent: () => this.hasExternalProcessingConsent(),
     });
@@ -73,15 +70,15 @@ class ProviderRegistry {
       this.inMemoryConsent = storedConsent === 'true';
 
       const storedMode = storage.getItem(STORAGE_KEY_MODE);
-      // Only restore 'remote' if it was explicitly stored AND remote is configured
-      if (storedMode === 'remote' && this.remoteProvider.isConfigured()) {
-        this.inMemoryMode = 'remote';
-      } else {
+      if (storedMode === 'local') {
         this.inMemoryMode = 'local';
+      } else {
+        // Default to 'remote' (Cloud AI) on first visit
+        this.inMemoryMode = 'remote';
       }
     } catch {
       // Storage access restricted or unavailable
-      this.inMemoryMode = 'local';
+      this.inMemoryMode = 'remote';
       this.inMemoryConsent = false;
     }
   }
@@ -155,7 +152,7 @@ class ProviderRegistry {
    * Reset registry state (used for testing isolation).
    */
   reset(): void {
-    this.inMemoryMode = 'local';
+    this.inMemoryMode = 'remote';
     this.inMemoryConsent = false;
     const storage = getStorage();
     if (storage) {

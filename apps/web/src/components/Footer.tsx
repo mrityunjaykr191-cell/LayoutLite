@@ -17,10 +17,14 @@ export const Footer: React.FC<FooterProps> = ({ mode }) => {
           LayoutLite — Accurate portrait photo tiling for physical printing.
         </p>
         <p className="flex items-center gap-1.5 text-[#777570]">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-600" aria-hidden="true" />
+          <span
+            className={`inline-block h-1.5 w-1.5 rounded-full ${isRemote ? 'bg-amber-600' : 'bg-emerald-600'}`}
+            aria-hidden="true"
+          />
           <span>
-            Background removal sends the cropped photo to remove.bg over HTTPS
-            {isRemote ? ' through the cloud service' : ' through the local service'}
+            {isRemote
+              ? 'Background removal sends the cropped photo to remove.bg over HTTPS through the cloud service'
+              : 'Local background removal processes photos on-device with rembg (u2netp)'}
           </span>
         </p>
       </div>

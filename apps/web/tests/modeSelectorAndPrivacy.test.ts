@@ -53,12 +53,12 @@ describe('Phase 3: Background Removal Mode Selector & Privacy Indicators', () =>
   const bgStepContent = fs.readFileSync(backgroundStepPath, 'utf-8');
 
   describe('1. Mode Selection & First-Time Visitor Defaults', () => {
-    it('defaults to Local AI on first visit when storage is empty', () => {
+    it('defaults to Cloud AI on first visit when storage is empty', () => {
       setupTestEnvironment();
-      assert.equal(providerRegistry.getActiveMode(), 'local');
+      assert.equal(providerRegistry.getActiveMode(), 'remote');
       assert.equal(providerRegistry.hasRemoteConsent(), false);
-      assert.equal(providerRegistry.getActiveProvider().mode, 'local');
-      assert.equal(providerRegistry.getActiveProvider().isRemote, false);
+      assert.equal(providerRegistry.getActiveProvider().mode, 'remote');
+      assert.equal(providerRegistry.getActiveProvider().isRemote, true);
     });
 
     it('persists mode selection to localStorage', () => {
@@ -220,10 +220,10 @@ describe('Phase 3: Background Removal Mode Selector & Privacy Indicators', () =>
       assert.ok(bgStepContent.includes('aria-checked={mode === \'remote\'}'), 'Must track active remote radio');
     });
 
-    it('discloses that local and cloud processing send photos to remove.bg', () => {
+    it('discloses processing details accurately for local and cloud modes', () => {
       assert.ok(
-        bgStepContent.includes('The local service sends your cropped photo to remove.bg over HTTPS for processing.'),
-        'Must disclose external processing from the local service'
+        bgStepContent.includes('Local AI uses rembg (u2netp model) running on your computer. 100% private & offline.'),
+        'Must disclose local on-device rembg u2netp processing'
       );
       assert.ok(
         bgStepContent.includes('The cloud service sends your cropped photo to remove.bg over HTTPS for processing.'),
@@ -239,8 +239,8 @@ describe('Phase 3: Background Removal Mode Selector & Privacy Indicators', () =>
         'Must have clear consent heading'
       );
       assert.ok(
-        bgStepContent.includes('if (!providerRegistry.hasExternalProcessingConsent())'),
-        'Must gate processing on consent in both service modes'
+        bgStepContent.includes('mode === \'remote\' && !providerRegistry.hasExternalProcessingConsent()'),
+        'Must gate cloud processing on consent'
       );
       assert.ok(
         bgStepContent.includes('Agree &amp; Remove Background') || bgStepContent.includes('Agree & Remove Background'),
@@ -263,25 +263,36 @@ describe('Phase 3: Background Removal Mode Selector & Privacy Indicators', () =>
   });
 
   describe('5. Global Dynamic Privacy Indicators', () => {
-    it('Header discloses remove.bg processing for all modes', () => {
+    it('Header discloses remove.bg processing in remote mode and local on-device in local mode', () => {
       assert.ok(
         headerContent.includes('Background removal sends photo to remove.bg'),
-        'Header must disclose the external provider'
+        'Header must disclose external provider for remote mode'
       );
-      assert.ok(headerContent.includes('remove.bg'), 'Header must identify the external provider on mobile');
+      assert.ok(
+        headerContent.includes('Local processing · On-device only'),
+        'Header must disclose on-device privacy for local mode'
+      );
     });
 
-    it('Footer discloses remove.bg processing for all modes', () => {
+    it('Footer discloses remove.bg processing in remote mode and local on-device in local mode', () => {
       assert.ok(
         footerContent.includes('Background removal sends the cropped photo to remove.bg over HTTPS'),
-        'Footer must disclose the external provider'
+        'Footer must disclose external provider for remote mode'
+      );
+      assert.ok(
+        footerContent.includes('Local background removal processes photos on-device with rembg (u2netp)'),
+        'Footer must disclose on-device privacy for local mode'
       );
     });
 
-    it('UploadDropzone discloses remove.bg processing', () => {
+    it('UploadDropzone discloses cloud remove.bg or on-device rembg depending on mode', () => {
       assert.ok(
-        dropzoneContent.includes('Background removal sends the cropped photo to remove.bg'),
-        'UploadDropzone must disclose the external provider'
+        dropzoneContent.includes('Cloud service uses remove.bg API'),
+        'UploadDropzone must disclose remove.bg in remote mode'
+      );
+      assert.ok(
+        dropzoneContent.includes('Local service uses on-device rembg AI'),
+        'UploadDropzone must disclose on-device AI in local mode'
       );
     });
   });

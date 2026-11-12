@@ -2,6 +2,7 @@
 
 import io
 import logging
+from typing import Optional
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -10,6 +11,7 @@ from PIL import Image
 from app.config import settings
 from app.rate_limiter import check_rate_limit
 from app.schemas import ErrorResponse, HealthResponse
+from app.segmenter import BackgroundSegmenter, SegmentationError, get_segmenter
 from app.remove_bg_client import (
     RemoveBgAPIError,
     RemoveBgNotConfiguredError,
@@ -24,8 +26,8 @@ ALLOWED_PIL_FORMATS = {"JPEG", "PNG"}
 
 app = FastAPI(
     title="Passport Photo Studio - Background Removal Service",
-    description="Background removal using the remove.bg API",
-    version="0.2.0",
+    description="Local background removal using rembg (u2netp) and optional remove.bg API",
+    version="0.3.0",
 )
 
 # CORS configuration driven by settings
@@ -60,16 +62,37 @@ async def unhandled_exception_handler(_: Request, exc: Exception) -> JSONRespons
 
 
 @app.get("/api/health", response_model=HealthResponse)
-async def health_check() -> HealthResponse:
-    """Return microservice health and API-key configuration status."""
-    configured = bool(settings.REMOVE_BG_API_KEY)
-    return HealthResponse(
-        status="ok",
-        model="remove.bg",
-        ready=configured,
-        device="remote API",
-        error=None if configured else "Set REMOVE_BG_API_KEY on the background-removal service.",
-    )
+async def health_check(engine: Optional[str] = None) -> HealthResponse:
+    """Return microservice health and model readiness."""
+    if engine == "remove_bg":
+        configured = bool(settings.REMOVE_BG_API_KEY)
+        return HealthResponse(
+            status="ok",
+            model="remove.bg",
+            ready=configured,
+            device="remote API",
+            error=None if configured else "Set REMOVE_BG_API_KEY on the background-removal service.",
+        )
+
+    # Default: local rembg (u2netp) engine
+    try:
+        segmenter = get_segmenter()
+        return HealthResponse(
+            status="ok",
+            model="u2netp",
+            ready=True,
+            device="CPU (rembg local)",
+            error=None,
+        )
+    except Exception as exc:
+        logger.error("Local segmenter health check failed: %s", exc)
+        return HealthResponse(
+            status="error",
+            model="u2netp",
+            ready=False,
+            device="CPU",
+            error=str(exc),
+        )
 
 
 @app.post(
@@ -83,14 +106,16 @@ async def health_check() -> HealthResponse:
         413: {"model": ErrorResponse, "description": "Payload exceeds maximum allowed limit"},
         415: {"model": ErrorResponse, "description": "Unsupported media format"},
         429: {"model": ErrorResponse, "description": "Rate limit exceeded"},
+        500: {"model": ErrorResponse, "description": "Local model inference failure"},
         502: {"model": ErrorResponse, "description": "remove.bg API processing error"},
-        503: {"model": ErrorResponse, "description": "remove.bg API key is not configured"},
-        504: {"model": ErrorResponse, "description": "remove.bg API request timed out"},
+        503: {"model": ErrorResponse, "description": "Service not configured"},
+        504: {"model": ErrorResponse, "description": "API request timed out"},
     },
 )
 async def remove_background(
     request: Request,
     file: UploadFile = File(...),
+    engine: Optional[str] = None,
 ) -> Response:
     """Remove background from uploaded portrait photo and return transparent PNG."""
     # 0. Enforce abuse protection rate limits
@@ -163,27 +188,52 @@ async def remove_background(
             },
         )
 
-    # 4. Forward the validated image to remove.bg without writing it to disk
+    # 4. Process image using selected engine (default: local u2netp via rembg)
     mime_type = "image/jpeg" if format_name == "JPEG" else "image/png"
-    try:
-        output_png_bytes = await remove_bg_api(image_bytes, mime_type)
-    except RemoveBgNotConfiguredError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={
-                "error": "Background removal is not configured",
-                "detail": "Set REMOVE_BG_API_KEY on the background-removal service, or keep the original photo.",
-            },
-        ) from exc
-    except RemoveBgAPIError as exc:
-        logger.warning("remove.bg request failed: %s", exc)
-        raise HTTPException(
-            status_code=exc.status_code,
-            detail={
-                "error": "Background removal failed",
-                "detail": f"{exc} You can keep the original photo instead.",
-            },
-        ) from exc
+
+    if engine == "remove_bg":
+        try:
+            output_png_bytes = await remove_bg_api(image_bytes, mime_type)
+        except RemoveBgNotConfiguredError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={
+                    "error": "Background removal is not configured",
+                    "detail": "Set REMOVE_BG_API_KEY on the background-removal service, or keep the original photo.",
+                },
+            ) from exc
+        except RemoveBgAPIError as exc:
+            logger.warning("remove.bg request failed: %s", exc)
+            raise HTTPException(
+                status_code=exc.status_code,
+                detail={
+                    "error": "Background removal failed",
+                    "detail": f"{exc} You can keep the original photo instead.",
+                },
+            ) from exc
+    else:
+        # Default: local u2netp rembg model
+        try:
+            segmenter = get_segmenter()
+            output_png_bytes = segmenter.remove_background(image_bytes)
+        except SegmentationError as exc:
+            logger.error("Local segmentation inference error: %s", exc)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={
+                    "error": "Background removal failed",
+                    "detail": "The local AI model was unable to isolate the portrait subject. You can keep the original photo instead.",
+                },
+            ) from exc
+        except Exception as exc:
+            logger.error("Unexpected error during local background removal: %s", exc)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={
+                    "error": "Background removal failed",
+                    "detail": "An unexpected error occurred during segmentation.",
+                },
+            ) from exc
 
     # 5. Return transparent PNG with strict no-store headers
     return Response(

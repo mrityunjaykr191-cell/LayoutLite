@@ -127,26 +127,23 @@ describe('Dual Background Removal Architecture', () => {
       }
     });
 
-    it('requires explicit consent before sending a photo through the local service', async () => {
+    it('processes photos through the local service without requiring remote consent', async () => {
       setupTestEnvironment();
       const originalFetch = globalThis.fetch;
       const provider = new LocalBackgroundRemovalProvider();
       let fetchInvoked = false;
       globalThis.fetch = async () => {
         fetchInvoked = true;
-        return new Response(new Blob(['cutout']), { status: 200 });
+        return new Response(new Blob(['cutout'], { type: 'image/png' }), {
+          status: 200,
+          headers: { 'Content-Type': 'image/png' },
+        });
       };
 
       try {
-        let caughtError: unknown = null;
-        try {
-          await provider.removeBackground(new Blob(['photo']));
-        } catch (err: unknown) {
-          caughtError = err;
-        }
-
-        assert.ok(caughtError instanceof RemoteConsentRequiredError);
-        assert.equal(fetchInvoked, false);
+        const result = await provider.removeBackground(new Blob(['photo']));
+        assert.ok(result instanceof Blob);
+        assert.equal(fetchInvoked, true);
       } finally {
         globalThis.fetch = originalFetch;
       }
@@ -283,21 +280,21 @@ describe('Dual Background Removal Architecture', () => {
   });
 
   describe('ProviderRegistry & Preference Persistence', () => {
-    it('defaults to local mode on first visit with clean storage', () => {
+    it('defaults to remote (Cloud AI) mode on first visit with clean storage', () => {
       setupTestEnvironment();
-      assert.equal(providerRegistry.getActiveMode(), 'local');
+      assert.equal(providerRegistry.getActiveMode(), 'remote');
       assert.equal(providerRegistry.hasRemoteConsent(), false);
       const activeProvider = providerRegistry.getActiveProvider();
-      assert.equal(activeProvider.mode, 'local');
-      assert.equal(activeProvider.isRemote, false);
+      assert.equal(activeProvider.mode, 'remote');
+      assert.equal(activeProvider.isRemote, true);
     });
 
-    it('never silently switches from local to remote', () => {
-      setupTestEnvironment();
-      providerRegistry.configureEndpoints({ remoteUrl: 'https://remote.api' });
-      // Even with remote configured, default is strictly local
+    it('preserves user preference when local mode is explicitly selected', () => {
+      const storage = setupTestEnvironment();
+      providerRegistry.setActiveMode('local');
       assert.equal(providerRegistry.getActiveMode(), 'local');
       assert.equal(providerRegistry.getActiveProvider().mode, 'local');
+      assert.equal(storage.getItem(STORAGE_KEY_MODE), 'local');
     });
 
     it('persists explicit mode selection and consent to localStorage', () => {
